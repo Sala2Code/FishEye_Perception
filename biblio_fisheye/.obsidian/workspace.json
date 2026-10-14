@@ -139,32 +139,16 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Tracking.md",
+                "file": "papier/WideDepth_Millimeter-Accurate_Benchmark_for Fisheye_Depth_Estimation.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Tracking"
+              "title": "WideDepth_Millimeter-Accurate_Benchmark_for Fisheye_Depth_Estimation"
             }
           }
         ],
         "currentTab": 9
-      },
-      {
-        "id": "b1256898a27470da",
-        "type": "tabs",
-        "children": [
-          {
-            "id": "a49928b6a106ec8f",
-            "type": "leaf",
-            "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Vue graphique"
-            }
-          }
-        ]
       }
     ],
     "direction": "vertical"
@@ -322,9 +306,9 @@
   },
   "left-ribbon": {
     "hiddenItems": {
+      "canvas:Créer un nouveau canvas": false,
       "switcher:Ouvrir le sélecteur rapide": false,
       "graph:Ouvrir la vue graphique": false,
-      "canvas:Créer une nouvelle toile": false,
       "daily-notes:Ouvrir la note quotidienne": false,
       "templates:Insérer le modèle": false,
       "command-palette:Ouvrir la palette de commandes": false,
@@ -333,18 +317,21 @@
   },
   "active": "339e41e0b0368ae1",
   "lastOpenFiles": [
+    "Stéréo.md",
+    "papier/Monocular_Depth_Estimation_from_a_Fisheye_Camera_Based_on_Knowledge_Distillation.md",
+    "papier/Fisheye_omnidirectional_stereo depth_estimation_assisted_with_edge-awareness.md",
     "Sujet.md",
     "Tracking.md",
     "Pré-traitement.md",
-    "Stéréo.md",
+    "papier/WideDepth_Millimeter-Accurate_Benchmark_for Fisheye_Depth_Estimation.md",
+    "TODO.md",
     "papier/Caron_Models_and_Calibration_Methods.md",
     "papier/Plaut_Yaacov_El_Shlomo_3D_Object_Detection_from_a_Single_Fisheye_Image_Without_a_Single_Fisheye_Training_Image.md",
-    "papier/Richard_Hartley_Andrew_Zisserman-Multiple_View_Geometry_in_Computer_Vision-EN.md",
     "papier/Wen_Trepte_Aribido_Kautz_Gallo_Birchfield_FoundationStereo_Zero-Shot_Stereo_Matching.md",
-    "Blogs.md",
-    "TODO.md",
-    "OpenCV.md",
     "papier/Bewley_Ge_Ott_Ramos_Upcroft_Simple_Online_and_Realtime_Tracking.md",
+    "papier/Richard_Hartley_Andrew_Zisserman-Multiple_View_Geometry_in_Computer_Vision-EN.md",
+    "Blogs.md",
+    "OpenCV.md",
     "Sans titre",
     "papier"
   ]
