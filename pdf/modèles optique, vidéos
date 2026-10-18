@@ -1,0 +1,17 @@
+https://youtu.be/Hz8kz5aeQ44?is=MZRPbjqNQphIhrre
+
+La matrice de caméra projette un point 3D de l'espace réel en coordonnées pixel 2D selon le modèle sténopé.
+
+Pour linéariser la division par la profondeur issue de la perspective, le calcul utilise les coordonnées homogènes. L'opération se résume au produit de deux matrices.
+
+La matrice extrinsèque (3x4) applique une rotation et une translation pour faire passer le point du repère monde au repère caméra.
+
+La matrice intrinsèque (3x3) convertit ensuite ces coordonnées 3D en pixels via les paramètres internes du capteur : focales en pixels et centre optique.
+
+Le produit de ces deux matrices forme la matrice de projection globale (3x4). Après multiplication par le point 3D homogène, diviser par la dernière composante donne la position finale du pixel.
+
+-----------------------------------------------------------------------------------------
+
+https://youtu.be/H5qbRTikxI4?is=AkrMAUQRsD-7sJKy
+ (openCV, partie code)
+
