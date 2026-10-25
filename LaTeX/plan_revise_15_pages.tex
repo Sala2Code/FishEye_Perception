@@ -1,0 +1,106 @@
+% !TeX program = pdflatex
+% !BIB program = biber
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{lmodern,microtype}
+\usepackage[margin=2.1cm]{geometry}
+\usepackage{amsmath}
+\usepackage{booktabs,tabularx,array}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage[backend=biber,style=numeric,sorting=none,maxnames=2,giveninits=true,doi=true,url=false,isbn=false]{biblatex}
+\addbibresource{ref.bib}
+\hypersetup{colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black}
+\setlist[itemize]{nosep,leftmargin=*}
+\setlist[enumerate]{nosep,leftmargin=*}
+\renewcommand{\arraystretch}{1.17}
+\newcommand{\todo}[1]{\textcolor{blue!45!black}{\emph{#1}}}
+\title{\textbf{Perception visuelle par caméras fisheye embarquées}}
+\author{Sala Raphaël, }
+\date{DATE}
+\begin{document}
+\maketitle
+% \noindent\textbf{Nature du document.} Proposition de plan et de références pour un rapport final d'environ \textbf{15 pages bibliographie comprise}. Il ne s'agit pas de résultats déjà démontrés. Les choix techniques et protocoles sont à vérifier lors des essais. On privilégie la compréhension visuelle des méthodes, l'informatique expérimentale et les preuves de reproductibilité.
+
+\begin{abstract}
+    \textcolor{red}{C'est une proposition, à améliroer, raccourcir et rajouter référence}
+    Les caméras fisheye offrent un champ de vision étendu, particulièrement utile pour la perception d'obstacles au voisinage d'un robot mobile. Contrairement aux images perspectives usuelles, elles représentent de grandes directions angulaires au prix d'importantes déformations géométriques, notamment aux bords. Les projections perspectives classiques ne permettent pas de préserver un champ de vision aussi large sans recadrage ou étirement excessif. Notre projet étudie une chaîne de perception fondée sur la calibration et la reprojection des images fisheye vers des représentations cylindriques ou équirectangulaires (ERP), afin d'exploiter des détecteurs préentraînés sur des images perspectives. Deux volets sont considérés : la détection et le suivi de personnes par association temporelle des observations, et l'estimation d'une profondeur dense à partir d'un banc stéréo fisheye. Leur combinaison doit, à terme, permettre de localiser et suivre des personnes dans le repère du robot. Le rapport présente les approches sélectionnées, leurs limites géométriques, les premières expériences et les critères retenus pour leur évaluation.
+\end{abstract}
+
+\textcolor{red}{le sommaire est juste là pour vérifier la pagination et la structure, il sera retiré dans le rapport final.}
+
+\tableofcontents
+
+
+% \section*{Objectif et périmètre}
+% \noindent \textbf{Question du projet :} comment exploiter des images de caméras fisheye avec des modèles de vision préentraînés sur images perspectives pour (i) détecter et suivre des personnes, (ii) calculer une profondeur dense à partir d'un banc fisheye stéréo, puis (iii) réunir les deux sorties pour connaître la position 3D des personnes dans le repère du robot ?
+% \begin{itemize}
+% \item Entrées : flux fisheye calibrés, et paires stéréo synchronisées quand disponibles.
+% \item Branche 1 : reprojection cylindrique ou ERP $\to$ détecteur préentraîné $\to$ tracker multi-objets $\to$ identités/trajectoires 2D.
+% \item Branche 2 : calibration relative $\to$ rectification stéréo adaptée au banc $\to$ correspondances denses $\to$ profondeur métrique, avec masque valide.
+% \item Fusion envisagée : lier à chaque instance suivie un point/une zone 3D et construire une trajectoire en coordonnées robot.
+% \end{itemize}
+% \noindent\textbf{Deux précisions indispensables.} Reprojeter sur un cylindre ou une sphère \emph{ne transforme pas} toute une image fisheye en une seule image perspective classique. Et une carte de profondeur n'est disponible que là où les deux caméras voient la même scène avec une géométrie exploitable : \emph{champ total et champ stéréo commun ne coïncident pas nécessairement}.
+
+
+
+\section{Introduction (1 page)}
+
+\textcolor{red}{Développer l'abstract (perspective VS fsheye mathématiquement, maniere d'introduire les notations) + rajouter quelques images +  photos pour visualiser de quoi on parle}
+
+\textcolor{red}{Parler des differents modeles fisheyes}
+\textcolor{red}{Calibration, parametre intrinsques, stéréo extrinsèque [Citer Abraham--Förstner~\cite{abraham2005}], modèle Kannala-Brandt~\cite{kannala2006}} % \cite{usenko2018} \cite{mei2007}
+
+\section{Prétraitements (3 pages)}
+
+\textcolor{red}{Principe du pré-traitement, justification et bref énumération des diffrentes méthodes avant de se concentrer sur cylindrique et ERP, analyse qualitative (car quantitative c'est pas vraiment possible je crois)}
+
+\paragraph{Cylindrique}
+
+\paragraph{ERP}
+
+\textcolor{red}{images}
+
+
+\section{Détection et suivi (4 pages)}
+\subsection*{Détection}
+
+\textcolor{red}{Décrire brièvement la logique d'un détecteur préentraîné (YOLOv8 / YOLO11 ; RT-DETR~\cite{zhao2024} en comparaison si justifiée).
+Cout computationnel, vitesse, précision, classes disponibles, AP50, mAP50--95. Montrer les limites de la détection sur des images fisheye brutes et les améliorations obtenues par reprojection cylindrique ou ERP. Mentionner brièvement les alternatives (FishEye8K~\cite{plauttutorial}, WoodScape~\cite{bourkefish2pano}) et leurs limites (données synthétiques, classes limitées, performances moindres). Montrer que la détection est un prérequis pour le suivi et la localisation 3D.}
+
+\subsection*{Tracking}
+\textcolor{red}{Principe du tracking, filtre de Kalmann, occlusion,cout computationnel}
+
+Expliquer (brievement) les différentes approches/modèles la chronologie, les nouveautés, les performances \textbf{SORT}~\cite{bewley2016} (Kalman + IoU + affectation), \textbf{Deep SORT}~\cite{wojke2017} (apparence), \textbf{ByteTrack}~\cite{zhang2022bytetrack} (détections de confiance basse), \textbf{BoT-SORT}~\cite{aharon2022} (mouvement/apparence). Puis deux publications spécialisées au \emph{suivi fisheye} particulièrement utiles : \textbf{FORT}~\cite{odic2023fort} et suivi de boîtes orientées \textbf{Lam (BMVC 2024)}~\cite{lam2024}. 
+
+
+\section{Banc stéréo fisheye et estimation dense (4 pages)}
+\subsection*{Calibration relative et rectification}
+\noindent Présenter la chaîne : deux vues $\to$ poses calibrées $\to$ rectification épipolaire adaptée à la géométrie $\to$ correspondances. Une projection panoramique \emph{seule} n'est pas équivalente à une rectification stéréo. Références à présenter dans un ordre historique lisible : Abraham--Förstner (2005)~\cite{abraham2005} ; Ohashi (2016/2017)~\cite{ohashi2016,ohashi2017} ; Schneider (2016)~\cite{schneider2016}. Comme mise en perspective plus moderne, mentionner les stratégies de rectification d'\textbf{OmniVidar}~\cite{xie2023} et de projection de Cassini dans \textbf{OmniStereo}~\cite{deng2025}. Les méthodes multi-fisheye ne sont pas toutes transférables à deux caméras ; préciser le nombre et la disposition des capteurs des articles.
+\noindent \textbf{Figure requise :} deux centres de caméras, rayons vers un point 3D et plan/ligne épipolaire ; puis une paire réellement rectifiée avec lignes guides.
+
+
+
+\subsection*{Cartes denses et évaluation}
+\textcolor{red}{decrire ce que sont les cartes de profondeur, comment elles sont faites : creuses VS denses. On se concentre sur la derniere car [??]}
+
+Classique : \textbf{StereoSGBM}~\cite{hirschmuller2008}, puis modèles préentraînés de correspondance stéréo \textbf{RAFT-Stereo}~\cite{lipson2021}, \textbf{FoundationStereo}~\cite{wen2025} (et éventuellement \textbf{Fast-FoundationStereo}, 2026~\cite{wen2026fast}). En état de l'art stéréo panoramique, citer \textbf{OmniMVS}~\cite{won2019}, \textbf{OmniVidar}~\cite{xie2023}, \textbf{OmniStereo}~\cite{deng2025}, \textbf{DFI-OmniStereo}~\cite{endres2025} et \textbf{MDP-Omni}~\cite{son2025} en les situant selon leur rig et leur projection. \textbf{WideDepth}~\cite{indyk2026} est un benchmark pertinent pour une première validation ; ses images de test fisheye sont produites à partir de scans laser de scènes réelles : ne pas les confondre avec une séquence brute capturée par vos caméras. HELVIPAD~\cite{zayene2025} est utile pour les images ERP, mais provient d'un autre type de configuration (deux caméras omnidirectionnelles superposées).
+% sugestion assez détaillée de chatGPT
+% \noindent \textbf{Figure requise :} images gauche/droite, disparité, profondeur colorisée, masque valide et (si disponible) carte d'erreur vs référence. Distinguer profondeur axiale, distance au centre et disparité ; ne pas appliquer aveuglément $Z=fB/d$ à des coordonnées sphériques non rectifiées.
+
+
+\section{Projet}
+
+Parler de notre projet en particulier, des différentes avancées. De la pipeline pour aborder la détection. Je pense le but final c'est d'arriver à traquer dans un espace 3d, un groupe de personnes qui marche et de reussir à savori où elles se trouvent. De manière détaillée ça serait : 
+
+Pour chaque personne détectée et suivie, remapper sa zone en coordonnées de la carte de profondeur, extraire une estimation robuste de distance (avec masque valide), reconstruire un point 3D et le transformer dans le repère robot. Le point 3D estimé sera un \emph{point représentatif} et non une boîte 3D complète, sauf extension décidée explicitement. Une médiane des valeurs de profondeur dans une région centrale est une première approche pratique, mais peut être biaisée par le fond ; mentionner le besoin éventuel de segmentation ou d'un point d'appui pertinent. Les ID sont définis par le tracker, pas par la carte de profondeur.
+\noindent \textbf{Figure requise :} image avec bbox personne et ID, carte de profondeur correspondante, même ID associé à un point $(X,Y,Z)$ dans le repère du robot.
+
+\begingroup
+\small
+\printbibliography[title={Bibliographie citée dans ce plan}]
+\endgroup
+\end{document}
