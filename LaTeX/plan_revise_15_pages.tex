@@ -11,6 +11,8 @@
 \usepackage{enumitem}
 \usepackage{hyperref}
 \usepackage{xcolor}
+\usepackage{float}
+\usepackage{svg}
 \usepackage[backend=biber,style=numeric,sorting=none,maxnames=2,giveninits=true,doi=true,url=false,isbn=false]{biblatex}
 \addbibresource{ref.bib}
 \hypersetup{colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black}
@@ -25,10 +27,11 @@
 \maketitle
 % \noindent\textbf{Nature du document.} Proposition de plan et de références pour un rapport final d'environ \textbf{15 pages bibliographie comprise}. Il ne s'agit pas de résultats déjà démontrés. Les choix techniques et protocoles sont à vérifier lors des essais. On privilégie la compréhension visuelle des méthodes, l'informatique expérimentale et les preuves de reproductibilité.
 
+
 \begin{abstract}
-    \textcolor{red}{C'est une proposition, à améliroer, raccourcir et rajouter référence}
-    Les caméras fisheye offrent un champ de vision étendu, particulièrement utile pour la perception d'obstacles au voisinage d'un robot mobile. Contrairement aux images perspectives usuelles, elles représentent de grandes directions angulaires au prix d'importantes déformations géométriques, notamment aux bords. Les projections perspectives classiques ne permettent pas de préserver un champ de vision aussi large sans recadrage ou étirement excessif. Notre projet étudie une chaîne de perception fondée sur la calibration et la reprojection des images fisheye vers des représentations cylindriques ou équirectangulaires (ERP), afin d'exploiter des détecteurs préentraînés sur des images perspectives. Deux volets sont considérés : la détection et le suivi de personnes par association temporelle des observations, et l'estimation d'une profondeur dense à partir d'un banc stéréo fisheye. Leur combinaison doit, à terme, permettre de localiser et suivre des personnes dans le repère du robot. Le rapport présente les approches sélectionnées, leurs limites géométriques, les premières expériences et les critères retenus pour leur évaluation.
+Les caméras fisheye offrent un champ de vision étendu. Leur géométrie de projection, différente de celle des caméras perspectives, complique toutefois l'utilisation directe des méthodes classiques de vision. Ce projet étudie la calibration de ces capteurs et l'influence de différentes représentations de l'image sur deux tâches complémentaires : la détection et le suivi de personnes dans un flux vidéo, et l'estimation d'une carte de profondeur dense à partir d'un banc stéréo fisheye. À terme, leur association vise à localiser les personnes suivies dans le repère du robot. Ce rapport présente les fondements géométriques, les approches retenues dans la littérature et les critères envisagés pour leur évaluation.
 \end{abstract}
+
 
 \textcolor{red}{le sommaire est juste là pour vérifier la pagination et la structure, il sera retiré dans le rapport final.}
 
@@ -46,13 +49,32 @@
 % \noindent\textbf{Deux précisions indispensables.} Reprojeter sur un cylindre ou une sphère \emph{ne transforme pas} toute une image fisheye en une seule image perspective classique. Et une carte de profondeur n'est disponible que là où les deux caméras voient la même scène avec une géométrie exploitable : \emph{champ total et champ stéréo commun ne coïncident pas nécessairement}.
 
 
+\section{Introduction}
 
-\section{Introduction (1 page)}
+Les caméras fisheye occupent une place importante en vision par ordinateur dès qu'un large champ de vue est recherché. On les rencontre en robotique, en surveillance, en imagerie médicale, en réalité virtuelle et dans de nombreux autres domaines \textcolor{red}{REF}.
+Leur intérêt principal est de capturer un champ de vision beaucoup plus large qu'une caméra perspective classique. Toutefois les objets observés loin de l'axe optique apparaissent fortement déformés et les méthodes de vision classiques, souvent conçues pour des images rectilignes, ne s'appliquent pas directement.
 
-\textcolor{red}{Développer l'abstract (perspective VS fsheye mathématiquement, maniere d'introduire les notations) + rajouter quelques images +  photos pour visualiser de quoi on parle}
+\textcolor{red}{Je réfléchis toujours à insérer un schema explicatif + voir si on aura besoin des ces notations. Je laisse tel quel pour l'instant.}
+Pour décrire cette différence, on considère un point 3D exprimé dans le repère de la caméra de coordonnées $X_c=(X,Y,Z)^\top$. La direction de ce point peut être décrite par deux angles : l'angle polaire $\theta$ qui mesure son écart à l'axe optique et l'azimut $\varphi$ qui indique sa direction autour de cet axe. Dans un modèle fisheye central, l'idée essentielle est que l'on ne projette pas directement le point 3D sur un plan image comme dans le modèle perspective classique. On commence d'abord par relier l'angle $\theta$ à une distance radiale dans l'image, notée $q(\theta)$.
+Cette fonction $q$ décrit donc la manière dont une direction de l'espace est reportée dans l'image. Une fois cette distance radiale obtenue, on la répartit selon la direction angulaire $\varphi$, puis on convertit la position obtenue en coordonnées pixels grâce aux paramètres intrinsèques de la caméra, en particulier les focales $f_x,f_y$ et le point principal $(c_x,c_y)$. Ainsi, le rôle de $q$ est central, c'est elle qui détermine comment les écarts angulaires dans la scène se traduisent en distances dans l'image et donc la nature même de la déformation fisheye.
 
-\textcolor{red}{Parler des differents modeles fisheyes}
-\textcolor{red}{Calibration, parametre intrinsques, stéréo extrinsèque [Citer Abraham--Förstner~\cite{abraham2005}], modèle Kannala-Brandt~\cite{kannala2006}} % \cite{usenko2018} \cite{mei2007}
+
+Plusieurs modèles de projection se distinguent par la loi radiale $q(\theta)$ qui associe à chaque direction de visée une position dans l'image (figure~\ref{fig:comparaison-projections}). Le modèle rectiligne utilise $q(\theta)=\tan\theta$ et permet que les droites de l'espace restent des droites dans l'image. En revanche, cette fonction diverge lorsque $\theta$ approche $90^\circ$, ce qui empêche de représenter sur un seul plan perspective un champ atteignant $180^\circ$. Les projections fisheye classiques répartissent autrement les directions observées. Le modèle équidistant fait correspondre des écarts angulaires égaux à des écarts radiaux égaux, tandis que le modèle équisolide conserve les rapports d'angles solides sous forme de rapports d'aires dans l'image. Le modèle stéréographique préserve localement les angles, alors que la projection orthographique correspond à la projection d'un hémisphère sur un plan~\cite{schneider2009,yogamani2019}. Ces propriétés ont des conséquences sur la déformation des objets et la distribution des détails dans l'image. Les domaines de validité diffèrent également, par exemple la loi orthographique $q(\theta)=\sin\theta$ cesse d'être injective au-delà de $90^\circ$.
+
+Ces modèles sont toutefois des descriptions idéales. La projection d'une optique réelle s'en écarte en raison des imperfections de fabrication et d'alignement. La calibration consiste alors à estimer un modèle capable de reproduire les positions effectivement mesurées dans l'image. Kannala et Brandt proposent notamment une loi radiale polynomiale qui généralise la projection équidistante et dont les coefficients sont ajustés à partir d'observations de calibration~\cite{kannala2006}. D'autres familles reposent sur une construction géométrique différente. Le modèle unifié de Mei et Rives fait intervenir une projection sur une sphère~\cite{mei2007}, tandis que le modèle Double Sphere utilise deux sphères et permet un calcul efficace de la projection inverse~\cite{usenko2018}. Aucun modèle n'est optimal pour toutes les optiques. Leur pertinence se juge notamment par la précision de reprojection, le domaine angulaire couvert et le coût des transformations. Une calibration fiable est ainsi nécessaire pour relier les pixels aux directions de l'espace et pour réaliser ensuite des reprojections ou des traitements stéréoscopiques cohérents~\cite{schneider2009,yogamani2019}. \textcolor{red}{J'essaierai de m'y intéresser plus pour expliquer pourquoi on choisit l'un oplutôt que l'autre dans la section Projet. Ca dépendra de commnent la calibration banc stéréo est présenté afin de pas faire redondant ou de trop technique.}
+
+\begin{figure}[H]
+  \centering
+  \includesvg[width=\linewidth]{img/fisheye_modeles_projection_1x5.svg}
+  \caption{Comparaison de cinq lois de projection appliquées à un même damier en 3D. La fonction $q(\theta)$ est indiquée pour chaque modèle. \textcolor{red}{TODO : grossir texte image}}
+  \label{fig:comparaison-projections}
+\end{figure}
+
+
+La suite de ce rapport s'organise autour de quatre parties. Nous étudions d'abord les principaux prétraitements des images fisheye, en particulier les reprojections cylindrique et équirectangulaire, ainsi que leurs limites. Nous présentons ensuite les approches de détection et de suivi de personnes, avant d'aborder la calibration d'un banc stéréo fisheye et les méthodes d'estimation de profondeur dense. Enfin, nous revenons sur les choix méthodologiques et les avancées du projet, avec pour objectif à terme de combiner le suivi et la profondeur afin de localiser les personnes dans l'espace.
+
+
+
 
 \section{Prétraitements (3 pages)}
 

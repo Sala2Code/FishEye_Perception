@@ -1,0 +1,24 @@
+{
+  "latex-workshop.latex.tools": [
+    {
+      "name": "latexmk-svg",
+      "command": "latexmk",
+      "args": [
+        "-pdf",
+        "-shell-escape",
+        "-synctex=1",
+        "-interaction=nonstopmode",
+        "-file-line-error",
+        "-cd",
+        "%DOC%"
+      ]
+    }
+  ],
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "latexmk (SVG avec Inkscape)",
+      "tools": ["latexmk-svg"]
+    }
+  ],
+  "latex-workshop.latex.recipe.default": "first"
+}

@@ -19,46 +19,119 @@
 
 \refsection{0}
   \datalist[entry]{none/global//global/global/global}
-    \entry{abraham2005}{article}{}{}
-      \name{author}{2}{}{%
-        {{hash=4f9aeebe280bc344124e53c1b32599dd}{%
-           family={Abraham},
-           familyi={A\bibinitperiod},
-           given={Steffen},
+    \entry{yogamani2019}{inproceedings}{}{}
+      \name{author}{17}{}{%
+        {{hash=5d9388f0d8da204c0507e670e634fc2b}{%
+           family={Yogamani},
+           familyi={Y\bibinitperiod},
+           given={Senthil},
            giveni={S\bibinitperiod}}}%
-        {{hash=1dd2db7101b76aa847306c830d0a078b}{%
-           family={Förstner},
-           familyi={F\bibinitperiod},
-           given={Wolfgang},
-           giveni={W\bibinitperiod}}}%
+        {{hash=1fb3bd01bf7aacf8a70db956f2e1fe3c}{%
+           family={Hughes},
+           familyi={H\bibinitperiod},
+           given={Ciaran},
+           giveni={C\bibinitperiod}}}%
+        {{hash=4fe29aafb5ed9a6475d9902b598ccab6}{%
+           family={Horgan},
+           familyi={H\bibinitperiod},
+           given={Jonathan},
+           giveni={J\bibinitperiod}}}%
+        {{hash=47a5eba46c1821cb4f5542ec1978e255}{%
+           family={Sistu},
+           familyi={S\bibinitperiod},
+           given={Ganesh},
+           giveni={G\bibinitperiod}}}%
+        {{hash=98cd0574e25b7c483014044660c4675b}{%
+           family={Varley},
+           familyi={V\bibinitperiod},
+           given={Padraig},
+           giveni={P\bibinitperiod}}}%
+        {{hash=4e74a2861479ef2a3a776619fedc2ea2}{%
+           family={O'Dea},
+           familyi={O\bibinitperiod},
+           given={Derek},
+           giveni={D\bibinitperiod}}}%
+        {{hash=e873d83eaa5ed06ead87f9433fbfc2be}{%
+           family={Uricar},
+           familyi={U\bibinitperiod},
+           given={Michal},
+           giveni={M\bibinitperiod}}}%
+        {{hash=6e4d7f3cb4ff566d3cd9dd15ee0db46a}{%
+           family={Milz},
+           familyi={M\bibinitperiod},
+           given={Stefan},
+           giveni={S\bibinitperiod}}}%
+        {{hash=8229641001cacd5a53e0f51564c8cdc9}{%
+           family={Simon},
+           familyi={S\bibinitperiod},
+           given={Martin},
+           giveni={M\bibinitperiod}}}%
+        {{hash=9ca910b493c28d8f658bed095be4c369}{%
+           family={Amende},
+           familyi={A\bibinitperiod},
+           given={Karl},
+           giveni={K\bibinitperiod}}}%
+        {{hash=e5422b8f998aade16aca32a00e78f990}{%
+           family={Witt},
+           familyi={W\bibinitperiod},
+           given={Christian},
+           giveni={C\bibinitperiod}}}%
+        {{hash=4b3ba19b620d9e97dffeaae43c63c2f4}{%
+           family={Rashed},
+           familyi={R\bibinitperiod},
+           given={Hazem},
+           giveni={H\bibinitperiod}}}%
+        {{hash=7fce44f680048f4383b9dad5da17269a}{%
+           family={Chennupati},
+           familyi={C\bibinitperiod},
+           given={Sumanth},
+           giveni={S\bibinitperiod}}}%
+        {{hash=9d92190f3fbe33f33c1fd1c712e5b02f}{%
+           family={Nayak},
+           familyi={N\bibinitperiod},
+           given={Sanjaya},
+           giveni={S\bibinitperiod}}}%
+        {{hash=18ac80bf1a19e4b7a0d3be82c48ff4d6}{%
+           family={Mansoor},
+           familyi={M\bibinitperiod},
+           given={Saquib},
+           giveni={S\bibinitperiod}}}%
+        {{hash=33e85dcd91a9791809d037ec60bb3549}{%
+           family={Perrotton},
+           familyi={P\bibinitperiod},
+           given={Xavier},
+           giveni={X\bibinitperiod}}}%
+        {{hash=b2f92fb2b65294f32cf3724cc709471b}{%
+           family={Perez},
+           familyi={P\bibinitperiod},
+           given={Patrick},
+           giveni={P\bibinitperiod}}}%
       }
-      \strng{namehash}{4957570ad17c7f0be479b622fad21e8c}
-      \strng{fullhash}{4957570ad17c7f0be479b622fad21e8c}
-      \strng{fullhashraw}{4957570ad17c7f0be479b622fad21e8c}
-      \strng{bibnamehash}{4957570ad17c7f0be479b622fad21e8c}
-      \strng{authorbibnamehash}{4957570ad17c7f0be479b622fad21e8c}
-      \strng{authornamehash}{4957570ad17c7f0be479b622fad21e8c}
-      \strng{authorfullhash}{4957570ad17c7f0be479b622fad21e8c}
-      \strng{authorfullhashraw}{4957570ad17c7f0be479b622fad21e8c}
+      \strng{namehash}{782b65a862ced215d3c770f744eb3b61}
+      \strng{fullhash}{46c700aec31de2a91a8f38cf05d0e55d}
+      \strng{fullhashraw}{46c700aec31de2a91a8f38cf05d0e55d}
+      \strng{bibnamehash}{782b65a862ced215d3c770f744eb3b61}
+      \strng{authorbibnamehash}{782b65a862ced215d3c770f744eb3b61}
+      \strng{authornamehash}{782b65a862ced215d3c770f744eb3b61}
+      \strng{authorfullhash}{46c700aec31de2a91a8f38cf05d0e55d}
+      \strng{authorfullhashraw}{46c700aec31de2a91a8f38cf05d0e55d}
       \field{sortinit}{1}
       \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{journaltitle}{ISPRS Journal of Photogrammetry and Remote Sensing}
-      \field{number}{5}
-      \field{title}{Fish-eye-stereo calibration and epipolar rectification}
-      \field{volume}{59}
-      \field{year}{2005}
-      \field{pages}{278\bibrangedash 288}
+      \field{booktitle}{Proceedings of the IEEE/CVF International Conference on Computer Vision}
+      \field{title}{WoodScape: A Multi-Task, Multi-Camera Fisheye Dataset for Autonomous Driving}
+      \field{year}{2019}
+      \field{pages}{9308\bibrangedash 9318}
       \range{pages}{11}
       \verb{doi}
-      \verb 10.1016/j.isprsjprs.2005.03.001
+      \verb 10.1109/ICCV.2019.00940
       \endverb
       \verb{urlraw}
-      \verb https://doi.org/10.1016/j.isprsjprs.2005.03.001
+      \verb https://openaccess.thecvf.com/content_ICCV_2019/html/Yogamani_WoodScape_A_Multi-Task_Multi-Camera_Fisheye_Dataset_for_Autonomous_Driving_ICCV_2019_paper.html
       \endverb
       \verb{url}
-      \verb https://doi.org/10.1016/j.isprsjprs.2005.03.001
+      \verb https://openaccess.thecvf.com/content_ICCV_2019/html/Yogamani_WoodScape_A_Multi-Task_Multi-Camera_Fisheye_Dataset_for_Autonomous_Driving_ICCV_2019_paper.html
       \endverb
     \endentry
     \entry{kannala2006}{article}{}{}
@@ -101,6 +174,131 @@
       \endverb
       \verb{url}
       \verb https://doi.org/10.1109/TPAMI.2006.153
+      \endverb
+    \endentry
+    \entry{mei2007}{inproceedings}{}{}
+      \name{author}{2}{}{%
+        {{hash=ad1bdfe5ac45e5a58d38518f9f6b42d8}{%
+           family={Mei},
+           familyi={M\bibinitperiod},
+           given={Christopher},
+           giveni={C\bibinitperiod}}}%
+        {{hash=a58e4df9819980734edc4cc9fe72732f}{%
+           family={Rives},
+           familyi={R\bibinitperiod},
+           given={Patrick},
+           giveni={P\bibinitperiod}}}%
+      }
+      \strng{namehash}{b993299e4df0579c1fc822a2906a515c}
+      \strng{fullhash}{b993299e4df0579c1fc822a2906a515c}
+      \strng{fullhashraw}{b993299e4df0579c1fc822a2906a515c}
+      \strng{bibnamehash}{b993299e4df0579c1fc822a2906a515c}
+      \strng{authorbibnamehash}{b993299e4df0579c1fc822a2906a515c}
+      \strng{authornamehash}{b993299e4df0579c1fc822a2906a515c}
+      \strng{authorfullhash}{b993299e4df0579c1fc822a2906a515c}
+      \strng{authorfullhashraw}{b993299e4df0579c1fc822a2906a515c}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{IEEE International Conference on Robotics and Automation (ICRA)}
+      \field{title}{Single View Point Omnidirectional Camera Calibration from Planar Grids}
+      \field{year}{2007}
+      \verb{doi}
+      \verb 10.1109/ROBOT.2007.364084
+      \endverb
+      \verb{urlraw}
+      \verb https://www.robots.ox.ac.uk/~cmei/publications.html
+      \endverb
+      \verb{url}
+      \verb https://www.robots.ox.ac.uk/~cmei/publications.html
+      \endverb
+    \endentry
+    \entry{usenko2018}{inproceedings}{}{}
+      \name{author}{3}{}{%
+        {{hash=15a876c83d83c2150b47a50afea3aaed}{%
+           family={Usenko},
+           familyi={U\bibinitperiod},
+           given={Vladyslav},
+           giveni={V\bibinitperiod}}}%
+        {{hash=7ede8ac4fd3d241da97d32921371a9aa}{%
+           family={Demmel},
+           familyi={D\bibinitperiod},
+           given={Nikolaus},
+           giveni={N\bibinitperiod}}}%
+        {{hash=1bd2b6b6ca2fc15a90f164070b626131}{%
+           family={Cremers},
+           familyi={C\bibinitperiod},
+           given={Daniel},
+           giveni={D\bibinitperiod}}}%
+      }
+      \strng{namehash}{31c625934933dc7d74e6f36d4c9a6d2e}
+      \strng{fullhash}{3f97f5c475cb328b2b38ebc8e7aa71ba}
+      \strng{fullhashraw}{3f97f5c475cb328b2b38ebc8e7aa71ba}
+      \strng{bibnamehash}{31c625934933dc7d74e6f36d4c9a6d2e}
+      \strng{authorbibnamehash}{31c625934933dc7d74e6f36d4c9a6d2e}
+      \strng{authornamehash}{31c625934933dc7d74e6f36d4c9a6d2e}
+      \strng{authorfullhash}{3f97f5c475cb328b2b38ebc8e7aa71ba}
+      \strng{authorfullhashraw}{3f97f5c475cb328b2b38ebc8e7aa71ba}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{International Conference on 3D Vision (3DV)}
+      \field{title}{The Double Sphere Camera Model}
+      \field{year}{2018}
+      \field{pages}{552\bibrangedash 560}
+      \range{pages}{9}
+      \verb{doi}
+      \verb 10.1109/3DV.2018.00069
+      \endverb
+      \verb{urlraw}
+      \verb https://arxiv.org/abs/1807.08957
+      \endverb
+      \verb{url}
+      \verb https://arxiv.org/abs/1807.08957
+      \endverb
+    \endentry
+    \entry{abraham2005}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=4f9aeebe280bc344124e53c1b32599dd}{%
+           family={Abraham},
+           familyi={A\bibinitperiod},
+           given={Steffen},
+           giveni={S\bibinitperiod}}}%
+        {{hash=1dd2db7101b76aa847306c830d0a078b}{%
+           family={Förstner},
+           familyi={F\bibinitperiod},
+           given={Wolfgang},
+           giveni={W\bibinitperiod}}}%
+      }
+      \strng{namehash}{4957570ad17c7f0be479b622fad21e8c}
+      \strng{fullhash}{4957570ad17c7f0be479b622fad21e8c}
+      \strng{fullhashraw}{4957570ad17c7f0be479b622fad21e8c}
+      \strng{bibnamehash}{4957570ad17c7f0be479b622fad21e8c}
+      \strng{authorbibnamehash}{4957570ad17c7f0be479b622fad21e8c}
+      \strng{authornamehash}{4957570ad17c7f0be479b622fad21e8c}
+      \strng{authorfullhash}{4957570ad17c7f0be479b622fad21e8c}
+      \strng{authorfullhashraw}{4957570ad17c7f0be479b622fad21e8c}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{ISPRS Journal of Photogrammetry and Remote Sensing}
+      \field{number}{5}
+      \field{title}{Fish-eye-stereo calibration and epipolar rectification}
+      \field{volume}{59}
+      \field{year}{2005}
+      \field{pages}{278\bibrangedash 288}
+      \range{pages}{11}
+      \verb{doi}
+      \verb 10.1016/j.isprsjprs.2005.03.001
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1016/j.isprsjprs.2005.03.001
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1016/j.isprsjprs.2005.03.001
       \endverb
     \endentry
     \entry{zhao2024}{inproceedings}{}{}
@@ -154,8 +352,8 @@
       \strng{authornamehash}{ca39f66a829edbb7af2a0de66abb2134}
       \strng{authorfullhash}{ac48645592f0c750b0b1e681728883bc}
       \strng{authorfullhashraw}{ac48645592f0c750b0b1e681728883bc}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{8}
+      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{booktitle}{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}
@@ -186,8 +384,8 @@
       \strng{authornamehash}{a45fe97a8cdf003bdb1fcbb40c7adebb}
       \strng{authorfullhash}{a45fe97a8cdf003bdb1fcbb40c7adebb}
       \strng{authorfullhashraw}{a45fe97a8cdf003bdb1fcbb40c7adebb}
-      \field{sortinit}{4}
-      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{sortinit}{9}
+      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{title}{Tutorial on Computer Vision with Fisheye Cameras}
@@ -218,8 +416,8 @@
       \strng{authornamehash}{88912dd4a25e751f045e6d3564e01fa6}
       \strng{authorfullhash}{88912dd4a25e751f045e6d3564e01fa6}
       \strng{authorfullhashraw}{88912dd4a25e751f045e6d3564e01fa6}
-      \field{sortinit}{5}
-      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{title}{Converting a fisheye image to panoramic, spherical and perspective projection}
@@ -270,8 +468,8 @@
       \strng{authornamehash}{ce33a25ec7d15f29e5c6b6d4524d072d}
       \strng{authorfullhash}{2a677301068897509d01d3287d9a96f2}
       \strng{authorfullhashraw}{2a677301068897509d01d3287d9a96f2}
-      \field{sortinit}{6}
-      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{booktitle}{2016 IEEE International Conference on Image Processing (ICIP)}
@@ -315,8 +513,8 @@
       \strng{authornamehash}{e3b21ca30a37c097e20088a3962cfa47}
       \strng{authorfullhash}{27fcc3aedd10236cc79b384a3481a278}
       \strng{authorfullhashraw}{27fcc3aedd10236cc79b384a3481a278}
-      \field{sortinit}{7}
-      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{booktitle}{2017 IEEE International Conference on Image Processing (ICIP)}
@@ -388,8 +586,8 @@
       \strng{authornamehash}{8670678d0226ac56309c13a114bfaa24}
       \strng{authorfullhash}{a54e26a59836c8695ca5ddf0e9f1f17d}
       \strng{authorfullhashraw}{a54e26a59836c8695ca5ddf0e9f1f17d}
-      \field{sortinit}{8}
-      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{booktitle}{Proceedings of the European Conference on Computer Vision}
@@ -433,8 +631,8 @@
       \strng{authornamehash}{2cc86bdd234142654e30bfdb174b72ec}
       \strng{authorfullhash}{f451a756a0ca7f8b535b87d554bfe289}
       \strng{authorfullhashraw}{f451a756a0ca7f8b535b87d554bfe289}
-      \field{sortinit}{9}
-      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{eprinttype}{arXiv}
@@ -755,8 +953,8 @@
       \strng{authornamehash}{c0ddeee6f6eba8c69a5544a2e58c97d2}
       \strng{authorfullhash}{ddab7ac6f56735807a1454e12491ec14}
       \strng{authorfullhashraw}{ddab7ac6f56735807a1454e12491ec14}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{booktitle}{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}
@@ -812,8 +1010,8 @@
       \strng{authornamehash}{a2620ca1b8e3b66eb16d37962725d661}
       \strng{authorfullhash}{32a6af0c5362cc0c4198f836a09c0dd2}
       \strng{authorfullhashraw}{32a6af0c5362cc0c4198f836a09c0dd2}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{booktitle}{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}
@@ -847,8 +1045,8 @@
       \strng{authornamehash}{8b67d698a8e7ec5a306ef42c307402ee}
       \strng{authorfullhash}{8b67d698a8e7ec5a306ef42c307402ee}
       \strng{authorfullhashraw}{8b67d698a8e7ec5a306ef42c307402ee}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{IEEE Transactions on Pattern Analysis and Machine Intelligence}
@@ -894,8 +1092,8 @@
       \strng{authornamehash}{1b3b348a452c2dd2467108dec18bb9da}
       \strng{authorfullhash}{2ce1874e8ddc5a3ad5e95ed491548355}
       \strng{authorfullhashraw}{2ce1874e8ddc5a3ad5e95ed491548355}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{booktitle}{2021 International Conference on 3D Vision (3DV)}
@@ -955,8 +1153,8 @@
       \strng{authorfullhash}{d49fda62a496825715cc80d9fcdf04fb}
       \strng{authorfullhashraw}{d49fda62a496825715cc80d9fcdf04fb}
       \field{extraname}{1}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{booktitle}{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}
@@ -1141,8 +1339,8 @@
       \strng{authornamehash}{b83d07861542e8d95a30e4fa7f49d502}
       \strng{authorfullhash}{bb0f3799bf4ab53721759f613b0ce56a}
       \strng{authorfullhashraw}{bb0f3799bf4ab53721759f613b0ce56a}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{booktitle}{Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)}
@@ -1198,8 +1396,8 @@
       \strng{authornamehash}{81da0f6406994a400f443a75517d0719}
       \strng{authorfullhash}{d9fb7dfda513f9e46ab7207d1dbbd0c5}
       \strng{authorfullhashraw}{d9fb7dfda513f9e46ab7207d1dbbd0c5}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{booktitle}{2026 IEEE International Conference on Robotics and Automation (ICRA)}
@@ -1263,8 +1461,8 @@
       \strng{authornamehash}{d343841b3e996ae29d6f6fea839d7b29}
       \strng{authorfullhash}{2eb5a22c2a4ae61612f1d8a6c4fbee23}
       \strng{authorfullhashraw}{2eb5a22c2a4ae61612f1d8a6c4fbee23}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{booktitle}{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}
@@ -1279,73 +1477,8 @@
       \verb https://openaccess.thecvf.com/content/CVPR2025/html/Zayene_HELVIPAD_A_Real-World_Dataset_for_Omnidirectional_Stereo_Depth_Estimation_CVPR_2025_paper.html
       \endverb
     \endentry
-    \entry{luiten2021}{article}{}{}
-      \name{author}{7}{}{%
-        {{hash=8c336c193892d2f1d5a6c952eb5b1d4c}{%
-           family={Luiten},
-           familyi={L\bibinitperiod},
-           given={Jonathon},
-           giveni={J\bibinitperiod}}}%
-        {{hash=9eb84424ec2ae8b1fcdbc0fba52982b8}{%
-           family={Osep},
-           familyi={O\bibinitperiod},
-           given={Aljosa},
-           giveni={A\bibinitperiod}}}%
-        {{hash=55da53311198c9f205e3dc82cd355300}{%
-           family={Dendorfer},
-           familyi={D\bibinitperiod},
-           given={Patrick},
-           giveni={P\bibinitperiod}}}%
-        {{hash=637cf9e6546686b7ce3fcafd1946098d}{%
-           family={Torr},
-           familyi={T\bibinitperiod},
-           given={Philip},
-           giveni={P\bibinitperiod}}}%
-        {{hash=06133052ac3c14a188601b82783cd4f7}{%
-           family={Geiger},
-           familyi={G\bibinitperiod},
-           given={Andreas},
-           giveni={A\bibinitperiod}}}%
-        {{hash=5d6ea9473f1d3c9da82e2e735b9b2f44}{%
-           family={Leal-Taixe},
-           familyi={L\bibinithyphendelim T\bibinitperiod},
-           given={Laura},
-           giveni={L\bibinitperiod}}}%
-        {{hash=89e3f1ee83923a2c7a44b7597b35fccd}{%
-           family={Leibe},
-           familyi={L\bibinitperiod},
-           given={Bastian},
-           giveni={B\bibinitperiod}}}%
-      }
-      \strng{namehash}{d8c6978630b47e7914b5edfd9b6cf542}
-      \strng{fullhash}{e45f6ee6ce9670d54419fe83360e99cc}
-      \strng{fullhashraw}{e45f6ee6ce9670d54419fe83360e99cc}
-      \strng{bibnamehash}{d8c6978630b47e7914b5edfd9b6cf542}
-      \strng{authorbibnamehash}{d8c6978630b47e7914b5edfd9b6cf542}
-      \strng{authornamehash}{d8c6978630b47e7914b5edfd9b6cf542}
-      \strng{authorfullhash}{e45f6ee6ce9670d54419fe83360e99cc}
-      \strng{authorfullhashraw}{e45f6ee6ce9670d54419fe83360e99cc}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{journaltitle}{International Journal of Computer Vision}
-      \field{title}{{HOTA}: A Higher Order Metric for Evaluating Multi-Object Tracking}
-      \field{volume}{129}
-      \field{year}{2021}
-      \field{pages}{548\bibrangedash 578}
-      \range{pages}{31}
-      \verb{doi}
-      \verb 10.1007/s11263-020-01375-2
-      \endverb
-      \verb{urlraw}
-      \verb https://doi.org/10.1007/s11263-020-01375-2
-      \endverb
-      \verb{url}
-      \verb https://doi.org/10.1007/s11263-020-01375-2
-      \endverb
-    \endentry
   \enddatalist
+  \missing{schneider2009}
 \endrefsection
 \endinput
 
