@@ -3,7 +3,7 @@
 Depuis la racine du dépôt, avec une distribution TeX comprenant `latexmk` et `biber` :
 
 ```powershell
-latexmk -pdf -interaction=nonstopmode -halt-on-error LaTeX/plan_revise_15_pages.tex
+latexmk -pdf -interaction=nonstopmode -halt-on-error LaTeX/main.tex
 ```
 
 La configuration `.latexmkrc` utilise le dossier du document comme répertoire de

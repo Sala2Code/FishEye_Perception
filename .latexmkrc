@@ -2,5 +2,6 @@
 # latexmk lance automatiquement Biber lorsque biblatex le demande.
 $pdf_mode = 1;
 $do_cd = 1;
+@default_files = ('LaTeX/main.tex');
 # Autoriser la conversion des SVG par Inkscape (package svg).
 $pdflatex = 'pdflatex -shell-escape %O %S';

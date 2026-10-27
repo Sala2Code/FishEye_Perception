@@ -1,6 +1,7 @@
 # Fichiers auxiliaires de compilation LaTeX (sources .tex/.bib et PDF conserves).
 *.aux
 *.bbl
+*.bbl-SAVE-ERROR
 *.bcf
 *.blg
 *.fdb_latexmk
