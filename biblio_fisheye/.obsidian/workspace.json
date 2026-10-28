@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "papier/Bewley_Ge_Ott_Ramos_Upcroft_Simple_Online_and_Realtime_Tracking.md",
+                "file": "Detection.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Bewley_Ge_Ott_Ramos_Upcroft_Simple_Online_and_Realtime_Tracking"
+              "title": "Detection"
             }
           }
         ]
@@ -99,7 +99,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "papier/Bewley_Ge_Ott_Ramos_Upcroft_Simple_Online_and_Realtime_Tracking.md",
+                "file": "Detection.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -189,32 +189,32 @@
   },
   "active": "bae3d6fa0510c311",
   "lastOpenFiles": [
-    "Note/Note 1 oct. 2026.pdf",
+    "Pré-traitement.md",
+    "papier/Plaut_Yaacov_El_Shlomo_3D_Object_Detection_from_a_Single_Fisheye_Image_Without_a_Single_Fisheye_Training_Image.md",
     "papier/Bewley_Ge_Ott_Ramos_Upcroft_Simple_Online_and_Realtime_Tracking.md",
+    "papier/Eder_Shvets_Lim_Frahm_Tangent_Images_for_Mitigating_Spherical_Distortion.md",
+    "papier/Caron_Models_and_Calibration_Methods.md",
+    "Tracking.md",
+    "TODO.md",
+    "Sujet.md",
+    "papier/Richard_Hartley_Andrew_Zisserman-Multiple_View_Geometry_in_Computer_Vision-EN.md",
+    "papier/Monocular_Depth_Estimation_from_a_Fisheye_Camera_Based_on_Knowledge_Distillation.md",
+    "papier/Fisheye_omnidirectional_stereo depth_estimation_assisted_with_edge-awareness.md",
+    "Note/Note 1 oct. 2026.pdf",
     "Note 1 oct. 2026.pdf",
     "Note",
     "Pasted image 20261028150304.png",
-    "Tracking.md",
     "papier/YOLO26_Key_Architectural_Enhancements_and Performance_Benchmarking_for_Real-Time_Object Detection.md",
     "papier/Ultralytics_YOLO_Evolution_An_Overview_of_YOLO27_YOLO26_YOLO11_YOLOv8_and_YOLOv5_Object_Detectors_for_Computer_Vision_and_Pattern_Recognition.md",
     "2510.09653v4.md",
     "papier/Wen_Trepte_Aribido_Kautz_Gallo_Birchfield_FoundationStereo_Zero-Shot_Stereo_Matching.md",
-    "papier/Eder_Shvets_Lim_Frahm_Tangent_Images_for_Mitigating_Spherical_Distortion.md",
-    "papier/Caron_Models_and_Calibration_Methods.md",
     "papier/2510.09653v4.pdf",
     "Stéréo.md",
-    "Sujet.md",
-    "TODO.md",
     "Detection.md",
     "Sans titre 1.canvas",
     "Sans titre.canvas",
-    "Pré-traitement.md",
-    "papier/Richard_Hartley_Andrew_Zisserman-Multiple_View_Geometry_in_Computer_Vision-EN.md",
     "papier/WideDepth_Millimeter-Accurate_Benchmark_for Fisheye_Depth_Estimation.md",
     "papier/nom papier.md",
-    "papier/Monocular_Depth_Estimation_from_a_Fisheye_Camera_Based_on_Knowledge_Distillation.md",
-    "papier/Fisheye_omnidirectional_stereo depth_estimation_assisted_with_edge-awareness.md",
-    "papier/Plaut_Yaacov_El_Shlomo_3D_Object_Detection_from_a_Single_Fisheye_Image_Without_a_Single_Fisheye_Training_Image.md",
     "Blogs.md",
     "OpenCV.md",
     "papier"
