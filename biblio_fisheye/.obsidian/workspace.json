@@ -4,39 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "37c1024e73df45b3",
+        "id": "bc769bca34a38db3",
         "type": "tabs",
         "children": [
           {
-            "id": "48e3b342d45c1c89",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Sujet.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Sujet"
-            }
-          },
-          {
-            "id": "08600aaf9629303b",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "TODO.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "TODO"
-            }
-          },
-          {
-            "id": "6e7c5e2fae8a715c",
+            "id": "bae3d6fa0510c311",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -47,108 +19,9 @@
               },
               "icon": "lucide-file",
               "title": "Bewley_Ge_Ott_Ramos_Upcroft_Simple_Online_and_Realtime_Tracking"
-            }
-          },
-          {
-            "id": "a51fc2d158714fbb",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "papier/Bewley_Ge_Ott_Ramos_Upcroft_Simple_Online_and_Realtime_Tracking.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Bewley_Ge_Ott_Ramos_Upcroft_Simple_Online_and_Realtime_Tracking"
-            }
-          },
-          {
-            "id": "e399d38b1a616fcd",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Stéréo.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Stéréo"
-            }
-          },
-          {
-            "id": "343e7968c0f8d75e",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Pré-traitement.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Pré-traitement"
-            }
-          },
-          {
-            "id": "e60dc2f92f479845",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "papier/Richard_Hartley_Andrew_Zisserman-Multiple_View_Geometry_in_Computer_Vision-EN.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Richard_Hartley_Andrew_Zisserman-Multiple_View_Geometry_in_Computer_Vision-EN"
-            }
-          },
-          {
-            "id": "a5ec18832ac07a08",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "papier/Wen_Trepte_Aribido_Kautz_Gallo_Birchfield_FoundationStereo_Zero-Shot_Stereo_Matching.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Wen_Trepte_Aribido_Kautz_Gallo_Birchfield_FoundationStereo_Zero-Shot_Stereo_Matching"
-            }
-          },
-          {
-            "id": "8ff5b35de5f6a404",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Pré-traitement.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Pré-traitement"
-            }
-          },
-          {
-            "id": "339e41e0b0368ae1",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "papier/WideDepth_Millimeter-Accurate_Benchmark_for Fisheye_Depth_Estimation.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "WideDepth_Millimeter-Accurate_Benchmark_for Fisheye_Depth_Estimation"
             }
           }
-        ],
-        "currentTab": 9
+        ]
       }
     ],
     "direction": "vertical"
@@ -210,7 +83,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 855.5
   },
   "right": {
     "id": "f2d086a4e7406326",
@@ -226,7 +99,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Tracking.md",
+                "file": "papier/Bewley_Ge_Ott_Ramos_Upcroft_Simple_Online_and_Realtime_Tracking.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -288,7 +161,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Tracking.md",
+                "file": "papier/Bewley_Ge_Ott_Ramos_Upcroft_Simple_Online_and_Realtime_Tracking.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -301,8 +174,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -315,24 +187,36 @@
       "bases:Créer une nouvelle base": false
     }
   },
-  "active": "339e41e0b0368ae1",
+  "active": "bae3d6fa0510c311",
   "lastOpenFiles": [
+    "Note/Note 1 oct. 2026.pdf",
+    "papier/Bewley_Ge_Ott_Ramos_Upcroft_Simple_Online_and_Realtime_Tracking.md",
+    "Note 1 oct. 2026.pdf",
+    "Note",
+    "Pasted image 20261028150304.png",
+    "Tracking.md",
+    "papier/YOLO26_Key_Architectural_Enhancements_and Performance_Benchmarking_for_Real-Time_Object Detection.md",
+    "papier/Ultralytics_YOLO_Evolution_An_Overview_of_YOLO27_YOLO26_YOLO11_YOLOv8_and_YOLOv5_Object_Detectors_for_Computer_Vision_and_Pattern_Recognition.md",
+    "2510.09653v4.md",
+    "papier/Wen_Trepte_Aribido_Kautz_Gallo_Birchfield_FoundationStereo_Zero-Shot_Stereo_Matching.md",
+    "papier/Eder_Shvets_Lim_Frahm_Tangent_Images_for_Mitigating_Spherical_Distortion.md",
+    "papier/Caron_Models_and_Calibration_Methods.md",
+    "papier/2510.09653v4.pdf",
     "Stéréo.md",
+    "Sujet.md",
+    "TODO.md",
+    "Detection.md",
+    "Sans titre 1.canvas",
+    "Sans titre.canvas",
+    "Pré-traitement.md",
+    "papier/Richard_Hartley_Andrew_Zisserman-Multiple_View_Geometry_in_Computer_Vision-EN.md",
+    "papier/WideDepth_Millimeter-Accurate_Benchmark_for Fisheye_Depth_Estimation.md",
+    "papier/nom papier.md",
     "papier/Monocular_Depth_Estimation_from_a_Fisheye_Camera_Based_on_Knowledge_Distillation.md",
     "papier/Fisheye_omnidirectional_stereo depth_estimation_assisted_with_edge-awareness.md",
-    "Sujet.md",
-    "Tracking.md",
-    "Pré-traitement.md",
-    "papier/WideDepth_Millimeter-Accurate_Benchmark_for Fisheye_Depth_Estimation.md",
-    "TODO.md",
-    "papier/Caron_Models_and_Calibration_Methods.md",
     "papier/Plaut_Yaacov_El_Shlomo_3D_Object_Detection_from_a_Single_Fisheye_Image_Without_a_Single_Fisheye_Training_Image.md",
-    "papier/Wen_Trepte_Aribido_Kautz_Gallo_Birchfield_FoundationStereo_Zero-Shot_Stereo_Matching.md",
-    "papier/Bewley_Ge_Ott_Ramos_Upcroft_Simple_Online_and_Realtime_Tracking.md",
-    "papier/Richard_Hartley_Andrew_Zisserman-Multiple_View_Geometry_in_Computer_Vision-EN.md",
     "Blogs.md",
     "OpenCV.md",
-    "Sans titre",
     "papier"
   ]
 }
