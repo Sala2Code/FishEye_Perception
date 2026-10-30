@@ -21,7 +21,7 @@
 \renewcommand{\arraystretch}{1.17}
 \newcommand{\todo}[1]{\textcolor{blue!45!black}{\emph{#1}}}
 \title{\textbf{Perception visuelle par caméras fisheye embarquées}}
-\author{Sala Raphaël, }
+\author{Sala Raphaël, CHOUMAN Ahmad }
 \date{DATE}
 \begin{document}
 \maketitle
@@ -80,9 +80,55 @@ La suite de ce rapport s'organise autour de quatre parties. Nous étudions d'abo
 
 \textcolor{red}{Principe du pré-traitement, justification et bref énumération des diffrentes méthodes avant de se concentrer sur cylindrique et ERP, analyse qualitative (car quantitative c'est pas vraiment possible je crois)}
 
-\paragraph{Cylindrique}
+\textcolor{red}{Ahmad (début de redac) :}
 
-\paragraph{ERP}
+Les modèles de vision classiques (comme les réseaux convolutionnels ou les transformateurs) ont été conçus et entraînés pour des images standards prises par des caméras classiques. Ils s'attendent à ce qu'une personne ou un objet garde la même forme générale, peu importe où il se trouve dans l'image. 
+
+Avec un objectif fisheye, ce n'est plus du tout le cas. Plus un objet s'éloigne du centre pour aller vers les bords, plus il est écrasé, courbé et déformé. Les modèles standards perdent donc vite leurs repères si on leur donne une image fisheye brute. Pour contourner ce problème sans devoir réentraîner un modèle de zéro sur des millions d'images fisheye annotées, la solution la plus simple consiste à « déplier » ou redresser géométriquement l'image sur une surface virtuelle intermédiaire. 
+
+Nous nous concentrons ici sur les deux représentations les plus courantes : la projection cylindrique et la projection équirectangulaire (ERP).
+
+\subsection{Cadre géométrique et principe du redressement inverse}
+
+Pour passer d'une image fisheye à une image dépliée, on commence par repérer chaque direction de l'espace. En prenant le centre optique de la caméra comme origine $\mathcal{R}_c = (O_c, \mathbf{X}_c, \mathbf{Y}_c, \mathbf{Z}_c)$ avec l'axe $\mathbf{Z}_c$ pointé tout droit, la direction de n'importe quel point 3D $\mathbf{X} = (X, Y, Z)^\top$ est définie par deux angles :
+\begin{itemize}
+    \item L'angle $\theta \in [0, \pi]$, qui mesure à quel point la direction s'écarte de l'axe central (l'axe optique).
+    \item L'angle $\varphi \in (-\pi, \pi]$, qui indique l'orientation tout autour de cet axe.
+\end{itemize}
+Mathématiquement :
+\begin{equation}
+\theta = \arccos\left(\frac{Z}{\|\mathbf{X}\|_2}\right), \quad \varphi = \operatorname{atan2}(Y, X).
+\end{equation}
+
+Une caméra fisheye réelle suit généralement un modèle géométrique calibré, comme celui de Kannala-Brandt[cite: 1]. Dans ce modèle, l'angle $\theta$ détermine à quelle distance $r(\theta)$ du centre de l'image le point va atterrir :
+\begin{equation}
+r(\theta) = k_1\theta + k_2\theta^3 + k_3\theta^5 + k_4\theta^7.
+\end{equation}
+Les coefficients $k_i$ et les paramètres internes (focales $f_x, f_y$ et centre $(c_x, c_y)$) permettent ensuite de trouver les coordonnées pixels réelles $(u_f, v_f)$ sur le capteur :
+\begin{equation}
+\begin{pmatrix} u_f \\ v_f \end{pmatrix} = \begin{pmatrix} f_x & 0 \\ 0 & f_y \end{pmatrix} \begin{pmatrix} r(\theta)\cos\varphi \\ r(\theta)\sin\varphi \end{pmatrix} + \begin{pmatrix} c_x \\ c_y \end{pmatrix}.
+\end{equation}
+
+\paragraph{Pourquoi utilise-t-on le redressement inverse ?}
+Si on projetait directement chaque pixel du fisheye vers l'image dépliée, on se retrouverait avec des « trous » et des pixels noirs dans l'image finale. On procède donc en marche arrière (\emph{backward mapping}) : pour chaque pixel de l'image de destination, on calcule la direction 3D vers laquelle il regarde, on cherche où cette direction atterrit dans l'image fisheye de base, puis on interpole la couleur avec les pixels voisins.
+
+\subsection{Reprojection cylindrique}
+
+L'idée est simple : on entoure la caméra d'un cylindre virtuel vertical, puis on déroule ce cylindre à plat comme une feuille de papier[cite: 1]. En robotique mobile terrestre, c'est particulièrement pratique car le robot et les piétons évoluent sur le même sol horizontal[cite: 1].
+
+\paragraph{Formulation mathématique.}
+Sur la feuille déroulée, un point est repéré par ses coordonnées planes $(x_{\text{cyl}}, y_{\text{cyl}})$. Si le cylindre a un rayon $R$, ces coordonnées sont reliées à l'angle horizontal $\psi$ (l'azimut) et à la hauteur $Y$ par :
+\begin{equation}
+x_{\text{cyl}} = R\,\psi, \quad y_{\text{cyl}} = R\,\frac{Y}{\sqrt{X^2 + Z^2}} = R\,\tan \phi_y,
+\end{equation}
+où $\psi = \operatorname{atan2}(X, Z)$ désigne l'angle horizontal par rapport à l'axe de visée, et $\phi_y$ l'angle vers le haut ou vers le bas.
+
+\textcolor{red}{[TODO : finir d'expliquer l'avantage pour les piétons debouts et l'étirement vers le haut + ajouter images]}
+
+\subsection{Projection équirectangulaire (ERP)}
+
+\paragraph{Formulation mathématique.}
+\textcolor{red}{[TODO : expliquer l'ERP puis pourquoi ça étire les pôles. À finir plus tard.]}
 
 \textcolor{red}{images}
 
