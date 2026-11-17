@@ -80,58 +80,75 @@ La suite de ce rapport s'organise autour de quatre parties. Nous étudions d'abo
 
 \textcolor{red}{Principe du pré-traitement, justification et bref énumération des diffrentes méthodes avant de se concentrer sur cylindrique et ERP, analyse qualitative (car quantitative c'est pas vraiment possible je crois)}
 
-\textcolor{red}{Ahmad (début de redac) :}
+\textcolor{red}{Ahmad:}
 
-Les modèles de vision classiques (comme les réseaux convolutionnels ou les transformateurs) ont été conçus et entraînés pour des images standards prises par des caméras classiques. Ils s'attendent à ce qu'une personne ou un objet garde la même forme générale, peu importe où il se trouve dans l'image. 
+Les modèles de vision classiques, qu'il s'agisse de réseaux convolutifs ou de transformateurs, ont été conçus et entraînés sur des images perspectives ordinaires. Leur fonctionnement repose sur l'hypothèse qu'un objet conserve approximativement la même géométrie quelque soit sa position dans l'image. Or, avec une optique fisheye, cette propriété disparaît : à mesure qu'un objet s'éloigne de l'axe optique vers les coins du capteur, il subit une courbure et un tassement radial prononcés. Fournir directement une image fisheye brute à un détecteur préentraîné entraîne ainsi une chute rapide de ses performances, notamment sur les bords du champ de vue.
 
-Avec un objectif fisheye, ce n'est plus du tout le cas. Plus un objet s'éloigne du centre pour aller vers les bords, plus il est écrasé, courbé et déformé. Les modèles standards perdent donc vite leurs repères si on leur donne une image fisheye brute. Pour contourner ce problème sans devoir réentraîner un modèle de zéro sur des millions d'images fisheye annotées, la solution la plus simple consiste à « déplier » ou redresser géométriquement l'image sur une surface virtuelle intermédiaire. 
+Plutôt que de réentraîner intégralement un réseau sur de larges bases de données fisheye annotées, une approche courante consiste à redresser géométriquement l'image brute vers une surface intermédiaire avant l'inférence. Plusieurs stratégies existent dans la littérature : le découpage en plusieurs vues planes tangentes~\cite{eder2020}, le redressement perspective local, ou encore les projections panoramiques continues. Parmi ces dernières, deux représentations dominent en pratique : la reprojection cylindrique et la projection équirectangulaire (ERP).
 
-Nous nous concentrons ici sur les deux représentations les plus courantes : la projection cylindrique et la projection équirectangulaire (ERP).
+\subsection{Passage géométrique et reprojection inverse}
 
-\subsection{Cadre géométrique et principe du redressement inverse}
-
-Pour passer d'une image fisheye à une image dépliée, on commence par repérer chaque direction de l'espace. En prenant le centre optique de la caméra comme origine $\mathcal{R}_c = (O_c, \mathbf{X}_c, \mathbf{Y}_c, \mathbf{Z}_c)$ avec l'axe $\mathbf{Z}_c$ pointé tout droit, la direction de n'importe quel point 3D $\mathbf{X} = (X, Y, Z)^\top$ est définie par deux angles :
-\begin{itemize}
-    \item L'angle $\theta \in [0, \pi]$, qui mesure à quel point la direction s'écarte de l'axe central (l'axe optique).
-    \item L'angle $\varphi \in (-\pi, \pi]$, qui indique l'orientation tout autour de cet axe.
-\end{itemize}
-Mathématiquement :
+Pour transformer une image fisheye vers une nouvelle géométrie, on relie d'abord chaque pixel aux directions de l'espace. Dans le repère caméra $\mathcal{R}_c = (O_c, \mathbf{X}_c, \mathbf{Y}_c, \mathbf{Z}_c)$ où $\mathbf{Z}_c$ represente l'axe optique, la direction d'un point 3D $\mathbf{X} = (X, Y, Z)^\top$ est entièrement définie par son angle d'incidence $\theta$ par rapport à l'axe optique et son angle horizental $\varphi$ autour de cet axe :
 \begin{equation}
-\theta = \arccos\left(\frac{Z}{\|\mathbf{X}\|_2}\right), \quad \varphi = \operatorname{atan2}(Y, X).
+\theta = \arccos\left(\frac{Z}{\|\mathbf{X}\|_2}\right) \in [0, \pi], \quad \varphi = \operatorname{atan2}(Y, X) \in (-\pi, \pi].
 \end{equation}
 
-Une caméra fisheye réelle suit généralement un modèle géométrique calibré, comme celui de Kannala-Brandt[cite: 1]. Dans ce modèle, l'angle $\theta$ détermine à quelle distance $r(\theta)$ du centre de l'image le point va atterrir :
+Une fois la caméra calibrée, par exemple via le modèle polynomial de Kannala-Brandt~\cite{kannala2006}, l'angle $\theta$ détermine la distance radiale $r(\theta)$ sur le plan image normalisé :
 \begin{equation}
 r(\theta) = k_1\theta + k_2\theta^3 + k_3\theta^5 + k_4\theta^7.
 \end{equation}
-Les coefficients $k_i$ et les paramètres internes (focales $f_x, f_y$ et centre $(c_x, c_y)$) permettent ensuite de trouver les coordonnées pixels réelles $(u_f, v_f)$ sur le capteur :
+Les paramètres intrinsèques (focales $f_x, f_y$ et centre optique $(c_x, c_y)$) permettent ensuite de convertir cette position en coordonnées pixels $(u_f, v_f)$ dans l'image source :
 \begin{equation}
 \begin{pmatrix} u_f \\ v_f \end{pmatrix} = \begin{pmatrix} f_x & 0 \\ 0 & f_y \end{pmatrix} \begin{pmatrix} r(\theta)\cos\varphi \\ r(\theta)\sin\varphi \end{pmatrix} + \begin{pmatrix} c_x \\ c_y \end{pmatrix}.
 \end{equation}
 
-\paragraph{Pourquoi utilise-t-on le redressement inverse ?}
-Si on projetait directement chaque pixel du fisheye vers l'image dépliée, on se retrouverait avec des « trous » et des pixels noirs dans l'image finale. On procède donc en marche arrière (\emph{backward mapping}) : pour chaque pixel de l'image de destination, on calcule la direction 3D vers laquelle il regarde, on cherche où cette direction atterrit dans l'image fisheye de base, puis on interpole la couleur avec les pixels voisins.
+En pratique, on n'effectue jamais la projection dans le sens direct (du fisheye vers l'image redressée), car le changement de densité des pixels laisserait des trous non renseignés dans l'image d'arrivée. On applique systématiquement une \emph{reprojection inverse} (\emph{backward mapping}) : on parcourt chaque pixel $(u_d, v_d)$ de la grille de destination, on remonte au rayon 3D unitaire $\mathbf{u}$ associé, on projette ce rayon dans l'image fisheye aux coordonnées continues $(u_f, v_f)$, puis on calcule l'intensité par interpolation bilinéaire ou bicubique. D'un point de vue pratique, comme la géométrie des capteurs reste fixe une fois la caméra calibrée, ces tables de correspondance (\emph{lookup tables}, LUT) peuvent être précalculées à l'initialisation. Le redressement s'effectue ensuite en quelques millisecondes à chaque image sans peser sur la cadence temps réel du système.
 
 \subsection{Reprojection cylindrique}
 
-L'idée est simple : on entoure la caméra d'un cylindre virtuel vertical, puis on déroule ce cylindre à plat comme une feuille de papier[cite: 1]. En robotique mobile terrestre, c'est particulièrement pratique car le robot et les piétons évoluent sur le même sol horizontal[cite: 1].
+La projection cylindrique consiste à entourer le centre optique par un cylindre virtuel vertical (d'axe parallèle à $\mathbf{Y}_c$), puis à le dérouler sur un plan~\cite{bourkefish2pano,lee2026}. Cette géométrie est particulièrement adaptée à la robotique mobile terrestre, où le capteur se déplace parallèlement au sol et observe des scènes principalement structurées autour de la verticale.
 
 \paragraph{Formulation mathématique.}
-Sur la feuille déroulée, un point est repéré par ses coordonnées planes $(x_{\text{cyl}}, y_{\text{cyl}})$. Si le cylindre a un rayon $R$, ces coordonnées sont reliées à l'angle horizontal $\psi$ (l'azimut) et à la hauteur $Y$ par :
+Sur le cylindre déroulé de rayon $R$, un rayon issu de l'espace est repéré par ses coordonnées planes $(x_{\text{cyl}}, y_{\text{cyl}})$ :
 \begin{equation}
 x_{\text{cyl}} = R\,\psi, \quad y_{\text{cyl}} = R\,\frac{Y}{\sqrt{X^2 + Z^2}} = R\,\tan \phi_y,
 \end{equation}
-où $\psi = \operatorname{atan2}(X, Z)$ désigne l'angle horizontal par rapport à l'axe de visée, et $\phi_y$ l'angle vers le haut ou vers le bas.
+où $\psi = \operatorname{atan2}(X, Z)$ correspond à l'angle d'azimut horizontal et $\phi_y$ à l'angle d'élévation verticale. Pour implémenter la reprojection inverse depuis une image cylindrique de centre $(c_u, c_v)$ et de focale virtuelle $f_{\text{cyl}}$, on associe à chaque pixel $(u_c, v_c)$ le vecteur unitaire :
+\begin{equation}
+\psi = \frac{u_c - c_u}{f_{\text{cyl}}}, \quad h = \frac{v_c - c_v}{f_{\text{cyl}}}, \quad \mathbf{u} = \frac{1}{\sqrt{1 + h^2}}\begin{pmatrix} \sin\psi \\ h \\ \cos\psi \end{pmatrix},
+\end{equation}
+d'où l'on déduit directement $(\theta, \varphi)$ pour échantillonner l'image fisheye. Le choix de la focale virtuelle $f_{\text{cyl}}$ permet par ailleurs de régler directement le compromis entre la largeur du champ horizontal couvert et le niveau de détail conservé au centre de l'image.
 
-\textcolor{red}{[TODO : finir d'expliquer l'avantage pour les piétons debouts et l'étirement vers le haut + ajouter images]}
+\paragraph{Avantages et inconvenient :}
+Le principal atout de cette projection est de conserver la rectitude des lignes verticales de la scène : les murs, les poteaux et surtout les silhouettes de personnes debout restent droits et verticaux, même sur les côtés du champ de vision. Les détecteurs 2D peuvent ainsi encadrer les piétons avec des boîtes englobantes bien ajustées. En contrepartie, la coordonnée verticale suit une loi en tangente ($\tan \phi_y$), ce qui provoque un étirement rapide vers le haut et le bas de l'image dès que l'angle d'élévation dépasse $50^\circ$ à $60^\circ$, rendant impossible la représentation d'un champ vertical complet ( de $180^\circ$). De plus, cette propriété repose sur l'hypothèse que l'axe du cylindre est bien aligné avec la verticale du monde réel : si le robot s'incline fortement sur une pente ou si la caméra est montée en plongée, les personnes recommencent à pencher sur les bords de l'image.
 
 \subsection{Projection équirectangulaire (ERP)}
 
+La projection équirectangulaire projette directement la sphère des directions sur une grille rectangulaire régulière, à la manière d'un planisphère reliant linéairement longitude et latitude~\cite{ohashi2017,bourkefish2pano}.
+
 \paragraph{Formulation mathématique.}
-\textcolor{red}{[TODO : expliquer l'ERP puis pourquoi ça étire les pôles. À finir plus tard.]}
+Pour une image ERP de largeur $W_{\text{erp}}$ et de hauteur $H_{\text{erp}}$ couvrant un champ horizontal $\Delta\Lambda$ et vertical $\Delta\Phi$, chaque pixel $(u_e, v_e)$, correspond directement à un couple d'angles sphériques $(\lambda, \phi)$ :
+\begin{equation}
+\lambda = \left(\frac{u_e}{W_{\text{erp}}} - \frac{1}{2}\right)\Delta\Lambda, \quad \phi = \left(\frac{1}{2} - \frac{v_e}{H_{\text{erp}}}\right)\Delta\Phi.
+\end{equation}
+Le vecteur directionnel unitaire associé s'écrit alors :
+\begin{equation}
+\mathbf{u}(\lambda, \phi) = \begin{pmatrix} \cos\phi\sin\lambda \\ -\sin\phi \\ \cos\phi\cos\lambda \end{pmatrix},
+\end{equation}
+ce qui permet, là encore par reprojection inverse, de retrouver les coordonnees correspondante sur le capteur fisheye.
 
-\textcolor{red}{images}
+\paragraph{Avantages et limites.}
+Contrairement à la projection cylindrique, l'ERP ne présente aucune divergence mathématique aux extrémités verticales et permet de représenter l'intégralité d'un hémisphère (voir $360^\circ$) dans une image bornée. En revanche, ellle introduit une forte distorsion horizontale à mesure que l'on s'approche des pôles ($\phi \to \pm \pi/2$), où une même variation de longitude $\Delta\lambda$ est etirée sur toute la largeur de l'image. De plus, les droites verticales de l'espace situées hors du méridien central apparaissent courbées, ce qui déforme légèrement les personnes situées en périphérie et peut dégrader la précision des boîtes englobantes par rapport à une projection cylindrique.
 
+\subsection{Analyse qualitative et limites d'échantillonnage}
+
+Au dela de la géométrie choisi, redresser une image change forcément la façon dont les pixels sont répartis. Sur un capteur fisheye, l'information n'est pas distribuée de manière uniforme : on a beaucoup de détails au centre, mais tout est très tassé sur les bords. Quand on déplie cette image vers une grille cylindrique ou ERP classique, on observe donc deux effets opposés selon l'endroit que l'on regarde :
+\begin{itemize}
+    \item \textbf{Au centre de l'image :} la résolution de départ est bonne, donc l'interpolation ne dégrade presque pas le rendu (on note juste un très léger lissage).
+    \item \textbf{Sur les bords extrêmes ($\theta > 75^\circ$) :} une grande partie de la scène était au départ comprimée sur quelques pixels seulement. En l'étirant pour remplir l'image redressée, on « invente » des pixels intermédiaires. Résultat : les contours deviennent flous et les personnes situées tout au bord perdent beaucoup en netteté.
+\end{itemize}
+
+Pour notre cas d'usage, où l'on cherche surtout à détecter et suivre des personnes qui marchent autour du robot, la reprojection cylindrique reste le choix le plus logique. Les piétons évoluent principalement autour de la ligne d'horizon (entre $-30^\circ$ et $+40^\circ$ en hauteur), une zone où le cylindre ne déforme presque pas les proportions et garde les silhouettes bien droites. L'ERP reste toutefois utile si l'on a besoin de voir tout en haut ou tout en bas du champ de vision, par exemple si quelqu'un passe très près du capteur.
 
 \section{Détection et suivi (4 pages)}
 \subsection*{Détection}
