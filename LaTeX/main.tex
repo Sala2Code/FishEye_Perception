@@ -9,12 +9,26 @@
 \usepackage{amsmath}
 \usepackage{booktabs,tabularx,array}
 \usepackage{enumitem}
+\usepackage{float}
 \usepackage{hyperref}
 \usepackage{xcolor}
-\usepackage{float}
 \usepackage{svg}
-\usepackage[backend=biber,style=numeric,sorting=none,maxnames=2,giveninits=true,doi=true,url=false,isbn=false]{biblatex}
+\usepackage{csquotes}
+\usepackage[backend=biber,style=authoryear,sorting=nyt,maxcitenames=2,mincitenames=1,maxbibnames=99,giveninits=true,uniquename=false,uniquelist=false,doi=true,url=false,isbn=false]{biblatex}
 \addbibresource{ref.bib}
+% La date de consultation ne remplace pas une date de publication absente.
+\DeclareLabeldate[online]{\field{date}\field{year}\literal{nodate}}
+% Citations sous la forme [Auteur, année], y compris les appels existants à \cite.
+\DeclareDelimFormat{nameyeardelim}{\addcomma\space}
+\DeclareCiteCommand{\cite}[\mkbibbrackets]
+  {\usebibmacro{prenote}}
+  {\usebibmacro{citeindex}\usebibmacro{cite}}
+  {\multicitedelim}
+  {\usebibmacro{postnote}}
+% Les termes et les titres bibliographiques restent en caractères droits.
+\renewcommand{\emph}[1]{\textup{#1}}
+\renewcommand*{\mkbibemph}[1]{\textup{#1}}
+\renewcommand*{\mkbibitalic}[1]{\textup{#1}}
 \hypersetup{colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black}
 \setlist[itemize]{nosep,leftmargin=*}
 \setlist[enumerate]{nosep,leftmargin=*}
@@ -23,6 +37,9 @@
 \title{\textbf{Perception visuelle par caméras fisheye embarquées}}
 \author{Sala Raphaël, CHOUMAN Ahmad }
 \date{DATE}
+
+\usepackage{tikz}
+
 \begin{document}
 \maketitle
 % \noindent\textbf{Nature du document.} Proposition de plan et de références pour un rapport final d'environ \textbf{15 pages bibliographie comprise}. Il ne s'agit pas de résultats déjà démontrés. Les choix techniques et protocoles sont à vérifier lors des essais. On privilégie la compréhension visuelle des méthodes, l'informatique expérimentale et les preuves de reproductibilité.
@@ -162,20 +179,110 @@ Cout computationnel, vitesse, précision, classes disponibles, AP50, mAP50--95. 
 Expliquer (brievement) les différentes approches/modèles la chronologie, les nouveautés, les performances \textbf{SORT}~\cite{bewley2016} (Kalman + IoU + affectation), \textbf{Deep SORT}~\cite{wojke2017} (apparence), \textbf{ByteTrack}~\cite{zhang2022bytetrack} (détections de confiance basse), \textbf{BoT-SORT}~\cite{aharon2022} (mouvement/apparence). Puis deux publications spécialisées au \emph{suivi fisheye} particulièrement utiles : \textbf{FORT}~\cite{odic2023fort} et suivi de boîtes orientées \textbf{Lam (BMVC 2024)}~\cite{lam2024}. 
 
 
-\section{Banc stéréo fisheye et estimation dense (4 pages)}
-\subsection*{Calibration relative et rectification}
-\noindent Présenter la chaîne : deux vues $\to$ poses calibrées $\to$ rectification épipolaire adaptée à la géométrie $\to$ correspondances. Une projection panoramique \emph{seule} n'est pas équivalente à une rectification stéréo. Références à présenter dans un ordre historique lisible : Abraham--Förstner (2005)~\cite{abraham2005} ; Ohashi (2016/2017)~\cite{ohashi2016,ohashi2017} ; Schneider (2016)~\cite{schneider2016}. Comme mise en perspective plus moderne, mentionner les stratégies de rectification d'\textbf{OmniVidar}~\cite{xie2023} et de projection de Cassini dans \textbf{OmniStereo}~\cite{deng2025}. Les méthodes multi-fisheye ne sont pas toutes transférables à deux caméras ; préciser le nombre et la disposition des capteurs des articles.
-\noindent \textbf{Figure requise :} deux centres de caméras, rayons vers un point 3D et plan/ligne épipolaire ; puis une paire réellement rectifiée avec lignes guides.
+\section{Banc stéréo fisheye et estimation dense}
+\label{sec:stereo-dense}
+Notre objectif est d'estimer la distance des surfaces visibles par deux caméras fisheye montées sur un banc fixe. Leur position relative reste constante et chaque estimation utilise une paire d'images synchronisées. Le grand angle permet d'observer des obstacles proches sur une zone étendue. Il complique cependant la recherche d'un même point dans les deux images, car son apparence et sa position dépendent fortement de la projection.
 
+Après avoir motivé le choix d'une carte dense, nous présentons deux manières de rechercher ces points communs, soit en transformant les images pour simplifier leur géométrie, soit en conservant la représentation fisheye. Nous examinons ensuite l'apport de réseaux entraînés à cette recherche.
 
+\subsection{Ce que l'on cherche à reconstruire}
+\subsubsection{Le rôle de la calibration}
+La calibration donne le modèle de projection de chaque caméra et leur position relative. Deux pixels correspondant à un même point définissent alors deux rayons dont l'intersection permet de retrouver sa position par triangulation. Abraham et Förstner~\cite{abraham2005} établissent ce cadre pour une paire fisheye. Sur un banc rigide, ces paramètres restent fixes. La profondeur n'est toutefois accessible que dans le champ commun aux caméras, avec une précision qui dépend notamment de l'angle entre les rayons.
 
-\subsection*{Cartes denses et évaluation}
-\textcolor{red}{decrire ce que sont les cartes de profondeur, comment elles sont faites : creuses VS denses. On se concentre sur la derniere car [??]}
+La carte doit aussi préciser la distance représentée et la caméra de référence. Pour un point de coordonnées $(X,Y,Z)$ dans le repère de cette caméra, la distance au centre optique est $\rho=\sqrt{X^2+Y^2+Z^2}$, tandis que $Z$ mesure la profondeur suivant son axe optique. Si le rayon forme un angle $\theta$ avec cet axe, $Z=\rho\cos\theta$. Ainsi, un point à $2$~m du centre et à $60^\circ$ de l'axe a une profondeur axiale de $1$~m. Cette différence compte pour localiser les obstacles sur les côtés de l'image.
 
-Classique : \textbf{StereoSGBM}~\cite{hirschmuller2008}, puis modèles préentraînés de correspondance stéréo \textbf{RAFT-Stereo}~\cite{lipson2021}, \textbf{FoundationStereo}~\cite{wen2025} (et éventuellement \textbf{Fast-FoundationStereo}, 2026~\cite{wen2026fast}). En état de l'art stéréo panoramique, citer \textbf{OmniMVS}~\cite{won2019}, \textbf{OmniVidar}~\cite{xie2023}, \textbf{OmniStereo}~\cite{deng2025}, \textbf{DFI-OmniStereo}~\cite{endres2025} et \textbf{MDP-Omni}~\cite{son2025} en les situant selon leur rig et leur projection. \textbf{WideDepth}~\cite{indyk2026} est un benchmark pertinent pour une première validation ; ses images de test fisheye sont produites à partir de scans laser de scènes réelles : ne pas les confondre avec une séquence brute capturée par vos caméras. HELVIPAD~\cite{zayene2025} est utile pour les images ERP, mais provient d'un autre type de configuration (deux caméras omnidirectionnelles superposées).
-% sugestion assez détaillée de chatGPT
-% \noindent \textbf{Figure requise :} images gauche/droite, disparité, profondeur colorisée, masque valide et (si disponible) carte d'erreur vs référence. Distinguer profondeur axiale, distance au centre et disparité ; ne pas appliquer aveuglément $Z=fB/d$ à des coordonnées sphériques non rectifiées.
+\subsubsection{Pourquoi privilégier une carte dense}
+Une reconstruction creuse, ou sparse, ne triangule que certains points facilement reconnaissables dans les deux images. Elle peut donner des distances utiles sur des coins ou des motifs, mais ne décrit pas les surfaces entre ces points. Une reconstruction semi-dense conserve davantage de pixels, généralement dans les régions présentant des variations d'intensité suffisantes. Une carte dense cherche au contraire une profondeur sur une grille couvrant le champ commun. Schneider et ses coauteurs~\cite{schneider2016} motivent ce passage au dense par les besoins de compréhension des scènes et de détection d'obstacles.
 
+Pour notre banc, l'intérêt est d'estimer l'étendue des obstacles, même lorsqu'ils présentent peu de points distinctifs, comme un mur ou un vêtement uniforme. Les méthodes denses utilisent alors le voisinage ou des informations apprises pour compléter les zones ambiguës. Une carte remplie ne garantit donc pas que toutes ses valeurs soient fiables, notamment dans les zones cachées à l'une des caméras. Enfin, la densité de la sortie ne préjuge pas du calcul employé. ELAS, présenté plus loin, produit une carte dense en s'appuyant d'abord sur quelques correspondances fiables.
+
+\subsection{Rectifier les images pour réutiliser la stéréovision classique}
+\subsubsection{De la correspondance à la profondeur}
+L'appariement consiste à retrouver dans l'image droite le point observé par un pixel gauche. Ce pixel définit un rayon sur lequel le point se situe à une distance inconnue. Vu depuis la caméra droite, l'ensemble des positions possibles sur ce rayon se projette généralement en une courbe dans l'image fisheye. Cette courbe est dite épipolaire, car elle résulte du plan contenant les deux centres optiques et le rayon gauche. La calibration permet donc de limiter la recherche à cette courbe (figure~\ref{fig:geometrie-stereo}).
+
+La projection définit comment représenter les directions observées sur une image. La rectification transforme conjointement les deux vues pour aligner leurs lieux épipolaires. Avec une rectification horizontale, les pixels correspondants se trouvent sur une même ligne. Une paire perspective n'est donc pas nécessairement rectifiée, et une rectification peut aussi employer une représentation sphérique.
+
+Dans une paire perspective rectifiée de même focale $f$, avec des points principaux alignés, la disparité est le décalage horizontal $d=u_l-u_r$ entre les deux projections d'un même point. Avec une base horizontale $B$, elle donne la profondeur axiale par $Z=fB/d$, où $f$ et $d$ sont exprimés en pixels. Un point proche présente ainsi une disparité plus grande qu'un point éloigné. Il s'agit d'un écart entre les deux caméras, et non entre une image fisheye et sa transformation.
+
+\begin{figure}[H]
+\centering
+\input{img/rectification_stereo.tex}
+\small
+\caption{D'un pixel fisheye à un point 3D. Exemple simulé avec deux caméras centrales équidistantes d'orientations différentes, observant un mur quadrillé, une silhouette et une boîte. La rectification reprojette l'ensemble des images dans deux vues perspectives virtuelles de même focale, sur un champ recadré commun. Les points de même couleur représentent le même point 3D : leurs ordonnées deviennent égales après rectification. Les cercles vides représentent deux distances candidates sur le rayon gauche ; le point cyan plein est la correspondance retenue. Le quadrillage montre aussi la transformation du décor, les pointillés gris délimitant le champ conservé. La dernière ligne illustre la triangulation sans respecter l'échelle. La rectification ne choisit pas la correspondance.}
+\label{fig:geometrie-stereo}
+\end{figure}
+
+La rectification perspective donne accès à des méthodes telles que SGM~\cite{hirschmuller2008} et ELAS~\cite{geiger2010}. Une seule vue perspective ne peut cependant couvrir $180^\circ$ ou davantage. Pour conserver un grand champ, Abraham et Förstner~\cite{abraham2005} étudient des rectifications sphériques. Avec une ERP, les repères doivent être orientés à partir de la base et de la rotation relative des caméras pour qu'un même plan épipolaire corresponde à une même ligne ou colonne. Deux panoramas construits indépendamment ne garantissent pas cet alignement.
+
+Dans cette représentation, le déplacement entre pixels correspond à un écart angulaire entre les rayons. La conversion en distance dépend aussi de leur direction et de la base. Elle repose sur la géométrie sphérique, sans appliquer directement la formule perspective $Z=fB/d$.
+
+\subsubsection{SGM et ELAS, deux méthodes sans entraînement}
+SGM, pour Semi-Global Matching, évalue plusieurs disparités pour chaque pixel~\cite{hirschmuller2008}. Chaque candidat reçoit un coût mesurant le désaccord d'apparence entre les deux observations. Un faible coût indique une correspondance plausible, mais plusieurs candidats peuvent se ressembler, par exemple devant un motif répété.
+
+Pour lever ces ambiguïtés, SGM pénalise les changements de disparité entre pixels voisins. Cette régularisation favorise des surfaces continues tout en autorisant les sauts de profondeur aux contours des objets. Le calcul cumule les coûts et les pénalités le long de parcours horizontaux, verticaux et diagonaux, puis combine leurs scores pour choisir les disparités. Le terme semi-global désigne cette approximation du calcul sur toute l'image, et non une carte semi-dense. Une régularisation excessive peut effacer les contours d'un obstacle.
+
+ELAS, pour Efficient Large-Scale Stereo, commence par sélectionner des correspondances fiables, appelées points d'appui~\cite{geiger2010}. Ces points sont reliés en triangles dans l'image. Les disparités aux sommets fournissent une première estimation à l'intérieur de chaque triangle. Cette estimation guide ensuite la comparaison des deux images pour les autres pixels, en limitant les candidats à examiner. ELAS réalise donc bien un appariement dense, plutôt qu'une simple interpolation. Là où SGM propage la cohérence entre voisins, ELAS s'appuie sur une estimation préalable construite à partir de points fiables.
+
+Aucune de ces méthodes ne demande d'entraînement, mais toutes deux restent sensibles aux textures, aux reflets et aux réglages. \texttt{StereoSGBM}, disponible dans OpenCV, est une variante de SGM dont le coût de comparaison diffère de celui de l'article original~\cite{opencvsgbm}.
+
+\subsubsection{Ce que montre leur application au fisheye}
+Schneider et ses coauteurs~\cite{schneider2016} rectifient une paire de fisheyes de $185^\circ$, séparés de $20$~cm, puis appliquent SGM ou ELAS aux images de $752\times480$ pixels. Les deux méthodes donnent des résultats proches dans leurs essais. Avec ELAS, la chaîne comprenant rectification, appariement et reconstruction 3D prend environ $150$~ms par paire. L'étude montre ainsi qu'une préparation géométrique adaptée permet de réutiliser des algorithmes existants.
+
+Elle montre aussi que cette préparation ne garantit pas une précision uniforme. L'incertitude des disparités augmente fortement au-delà de $40^\circ$ de l'axe dans leur dispositif. Une comparaison du relief reconstruit avec des points 3D de référence confirme la dégradation vers la périphérie. Ce seuil dépend du montage et des conditions de mesure. Pour notre banc, il faut donc mesurer où la profondeur reste fiable, plutôt que considérer tous les pixels reconstruits comme équivalents.
+
+\subsection{Rechercher les correspondances dans les images fisheye}
+La rectification étire ou comprime certaines régions et interpole les intensités sur une nouvelle grille. Elle peut ainsi lisser des textures ou retirer une partie du champ utile. Les méthodes suivantes conservent une représentation fisheye et adaptent la recherche à sa géométrie. Elles évitent la conversion préalable en vues perspectives rectifiées, sans supprimer toute interpolation pendant le calcul.
+
+\subsubsection{Adapter SGM ou tester des plans dans l'espace}
+Khomutenko, Garcia et Martinet~\cite{khomutenko2016} adaptent SGM en calculant les courbes épipolaires avec le modèle Enhanced Unified Camera Model. Les candidats sont comparés le long de ces courbes, puis le principe de régularisation de SGM est conservé. Sur un banc fixe, les courbes peuvent être calculées à l'initialisation et réutilisées dans le flux vidéo. Les correspondances doivent, elles, être recalculées pour chaque paire.
+
+Les essais portent sur des plans texturés photographiés depuis plusieurs positions d'une seule caméra montée sur un bras robotisé. Ils vérifient donc l'appariement sur une scène immobile, sans évaluer l'acquisition synchronisée de personnes en mouvement. L'intérêt pour notre banc est l'adaptation géométrique de SGM sans apprentissage, plutôt qu'une performance déjà établie sur notre usage.
+
+Le balayage de plans, ou plane sweeping, teste directement des positions possibles dans l'espace. Pour un pixel gauche, l'intersection de son rayon avec un plan candidat donne un point 3D hypothétique. Ce point est projeté dans l'image droite pour comparer les apparences. Le calcul est répété avec plusieurs plans, puis retient l'hypothèse donnant le meilleur accord. Häne et ses coauteurs~\cite{haene2014} appliquent ce principe aux fisheyes avec deux vues ou davantage. Leur méthode sert notamment de référence à VFS, présenté ci-dessous. Elle peut exploiter une paire de poses connues, même si les expériences comprennent aussi des vues successives d'une caméra mobile.
+
+\subsubsection{Affiner une carte par optimisation}
+Variational Fisheye Stereo, ou VFS, ajuste progressivement les correspondances pour réduire les différences d'apparence et les variations incohérentes de profondeur entre voisins~\cite{roxas2020}. Un champ de directions calculé à partir de la calibration guide les mises à jour le long des courbes épipolaires. La méthode ne nécessite pas d'entraînement.
+
+Sur les données réelles de l'article, VFS réduit l'erreur absolue moyenne de disparité de $1{,}75$ à $1{,}30$ pixel par rapport au balayage de plans (tableau~II). La comparaison porte sur les pixels valides de cette référence. Elle ne mesure donc pas la justesse de toutes les valeurs supplémentaires produites par VFS. Les $144$ paires d'évaluation sont obtenues à partir de mesures laser, avec des poses relatives variées.
+
+Un essai avec une paire Intel RealSense T265 et une GTX~1060 atteint $10$ images/s à $848\times800$ pixels avec cinq mises à jour, ou $30$ images/s sur des images réduites de moitié avec vingt mises à jour. Ce gain implique donc un changement de résolution et de réglages. Les auteurs signalent toutefois la perte possible d'objets fins et des difficultés pour les surfaces très proches. Ces limites sont importantes pour détecter un pied de chaise ou un obstacle au voisinage du robot.
+
+\subsection{Utiliser des réseaux entraînés avec une paire fisheye}
+\subsubsection{Ce que l'apprentissage change}
+Un réseau apprend, à partir d'exemples, à extraire des caractéristiques visuelles et à comparer les deux vues. Il peut exploiter un contexte plus large pour traiter les régions ambiguës, mais dépend des données utilisées pour son entraînement. BGNet~\cite{xu2021bgnet} et CREStereo~\cite{li2022crestereo}, initialement conçus pour la stéréovision perspective, sont retenus ici parce que WideDepth~\cite{indyk2026} les évalue sur des paires fisheye rectifiées.
+
+BGNet privilégie la vitesse. Il calcule l'essentiel des scores de correspondance à basse résolution, puis utilise une grille bilatérale apprise pour augmenter leur résolution en préservant les contours. Cette grille tient compte à la fois de la position et de l'apparence. CREStereo, pour Cascaded Recurrent Stereo, affine les disparités du grossier vers le fin par des mises à jour répétées. Sa comparaison adaptative des caractéristiques tolère de petits défauts d'alignement. Ces deux approches restent tributaires d'une préparation géométrique adaptée à la paire fisheye.
+
+\subsubsection{WideDepth, une évaluation à deux vues}
+WideDepth est un jeu de données et un protocole de comparaison, et non un réseau~\cite{indyk2026}. Il contient environ $5\,000$ paires issues de $101$ scènes intérieures, avec plusieurs bases et champs de vision. Les images sont générées à partir de scans laser colorés. Elles représentent donc des scènes réelles, sans constituer des acquisitions vidéo brutes.
+
+Les auteurs rectifient les images en ERP, retirent les zones vides et orientent la paire pour permettre une recherche horizontale. Ils convertissent ensuite les disparités en distances avec la géométrie correspondante. Leur comparaison avec des faces perspectives favorise cette préparation ERP dans le protocole étudié, sans établir une supériorité de toute ERP sur toute projection perspective (tableau~II).
+
+Le tableau~\ref{tab:widedepth-binoculaire} illustre surtout l'effet de l'adaptation aux données fisheye. L'EPE, pour End-Point Error, mesure ici l'erreur absolue moyenne de disparité en pixels. Le taux bad-3 est la proportion de pixels dont cette erreur dépasse trois pixels. Ces mesures portent sur l'appariement, pas directement sur une erreur de distance en mètres.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{lrrr}
+\toprule
+Modèle & EPE en pixels & bad-3 en \% & Latence en ms\\
+\midrule
+BGNet préentraîné & 3,411 & 24,34 & 19\\
+BGNet adapté au fisheye & 1,767 & 9,29 & 19\\
+CREStereo préentraîné & 1,759 & 9,02 & 284\\
+\bottomrule
+\end{tabular}
+\caption{Extrait du tableau~IV de WideDepth~\cite{indyk2026}, pour un champ de $195^\circ$ et une base de $65$~mm. Latences des modèles sur RTX~3080~Ti, en demi-précision à $1024\times512$ pixels. Elles ne donnent pas le temps de la chaîne complète. Les valeurs faibles sont préférables.}
+\label{tab:widedepth-binoculaire}
+\end{table}
+
+L'adaptation réduit d'environ $48\,\%$ l'EPE de BGNet, sans changer sa latence indiquée. Son erreur devient proche de celle de CREStereo, pour un calcul nettement plus court. Ce résultat montre l'intérêt d'adapter un petit modèle aux images visées, plutôt que choisir une architecture uniquement sur ses performances en stéréovision perspective.
+
+Cet entraînement utilise un jeu distinct d'environ $18\,000$ paires extérieures avec des mesures laser LiDAR, qui renseignent en moyenne $8{,}1\,\%$ des pixels. Des références creuses suffisent donc ici à entraîner une sortie dense. L'évaluation intérieure masque les surfaces transparentes et réfléchissantes et porte sur des scènes fixes. Elle ne renseigne pas la stabilité des distances sur une personne en mouvement ni les effets d'une synchronisation imparfaite.
+
+\subsection{Choix pour notre banc}
+Les travaux étudiés distinguent le choix de la représentation des images et celui de la méthode d'appariement. La rectification permet de réutiliser SGM, ELAS ou un réseau existant. Les méthodes directes adaptent plutôt la recherche à la géométrie fisheye. Aucune des évaluations présentées ne compare toutes ces options dans les mêmes conditions.
+
+Pour nos premiers essais, une paire rectifiée avec \texttt{StereoSGBM} constitue une référence accessible sans entraînement. CREStereo pourra être évalué sur les mêmes paires pour mesurer l'apport d'un réseau préentraîné. Si la rectification écarte une partie utile du champ ou dégrade les détails, une méthode directe mérite alors d'être examinée. La comparaison devra porter sur les erreurs de distance, les zones sans estimation et le temps complet de traitement sur le robot. Pour les personnes suivies, on vérifiera surtout la précision aux contours et la stabilité de la distance au cours du mouvement.
 
 \section{Projet}
 
