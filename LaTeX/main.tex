@@ -15,6 +15,7 @@
 \usepackage{xcolor}
 \usepackage{svg}
 \usepackage{csquotes}
+\usepackage{multirow}
 \usepackage[backend=biber,style=authoryear,sorting=nyt,maxcitenames=2,mincitenames=1,maxbibnames=99,giveninits=true,uniquename=false,uniquelist=false,doi=true,url=false,isbn=false]{biblatex}
 \addbibresource{ref.bib}
 % La date de consultation ne remplace pas une date de publication absente.
@@ -446,6 +447,39 @@ CREStereo préentraîné & 1,759 & 9,02 & 284\\
 L'adaptation réduit d'environ $48\,\%$ l'EPE de BGNet, sans changer sa latence indiquée. Son erreur devient proche de celle de CREStereo, pour un calcul nettement plus court. Ce résultat montre l'intérêt d'adapter un petit modèle aux images visées, plutôt que choisir une architecture uniquement sur ses performances en stéréovision perspective.
 
 Cet entraînement utilise un jeu distinct d'environ $18\,000$ paires extérieures avec des mesures laser LiDAR, qui renseignent en moyenne $8{,}1\,\%$ des pixels. Des références creuses suffisent donc ici à entraîner une sortie dense. L'évaluation intérieure masque les surfaces transparentes et réfléchissantes et porte sur des scènes fixes. Elle ne renseigne pas la stabilité des distances sur une personne en mouvement ni les effets d'une synchronisation imparfaite.
+
+\subsection{DFI-OmniStereo}
+DFI-OmniStereo~\cite{endres2025dfiomnistereo} se base sur des caméras stéréo verticales et utilise Depth Anything V2~\cite{yang2024depth}, un modèle de fondation mono, pour obtenir une carte de profondeur relative et une carte de caractéristiques sur quatre résolutions intermédiaires pour chacune des deux images fisheyes après avoir fait une projection ERP.
+
+Ensuite, il redimensionne les quatre résolutions intermédiaires vers la même résolution via une interpolation bilinéaire. Puis une méthode de disparité verticale est utilisée. Pour faire ça, DFI-OmniStereo se base sur une version d'IGEV-Stereo~\cite{xu2023iterative} adaptée pour la disparité verticale, pour prendre directement une carte de caractéristiques (au lieu de la faire lui-même) et ré-entrainer, on obtient la profondeur finale mais avec une moins bonne résolution que l'image originale.
+Pour finir, on upscale donc cette carte de profondeur avec une combinaison convexe pondérée par softmax, puis un passage en profondeur par mètre à partir d'une triangulation sphérique et de la base entre les 2 caméras.
+
+\begin{table}[htbp]
+\centering
+
+\label{tab:dfi_results}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llcccccccc}
+\toprule
+\multirow{2}{*}{\textbf{Modèle}} & \multirow{2}{*}{\textbf{Configuration}} & \multicolumn{4}{c}{\textbf{Disparité ($^\circ$)}} & \multicolumn{4}{c}{\textbf{Profondeur (m)}} \\
+\cmidrule(lr){3-6} \cmidrule(lr){7-10}
+ & & MAE $\downarrow$ & RMSE $\downarrow$ & MARE $\downarrow$ & LRCE $\downarrow$ & MAE $\downarrow$ & RMSE $\downarrow$ & MARE $\downarrow$ & LRCE $\downarrow$ \\
+\midrule
+PSMNet & Conventionnelle & 0,286 & 0,496 & 0,248 & -- & 2,509 & 5,673 & 0,176 & 1,809 \\
+360SD-Net & Omnidirectionnelle & 0,224 & 0,419 & 0,191 & -- & 2,122 & 5,077 & 0,152 & 0,904 \\
+IGEV-Stereo & Conventionnelle & 0,225 & 0,423 & 0,172 & -- & 1,860 & 4,474 & 0,146 & 1,203 \\
+360-IGEV-Stereo & Omnidirectionnelle & 0,188 & 0,404 & 0,146 & \textbf{0,054} & 1,720 & 4,297 & 0,130 & \textbf{0,388} \\
+\midrule
+\textbf{DFI-OmniStereo} & Omnidirectionnelle & \textbf{0,158} & \textbf{0,338} & \textbf{0,120} & 0,058 & \textbf{1,463} & \textbf{3,767} & \textbf{0,108} & 0,397 \\
+\bottomrule
+\end{tabular}%
+}
+\caption{Résultats DFI-OmniStereo}
+\end{table}
+
+Ce modèle est actuellement l'un des meilleurs modèles fonctionnant sur des caméras fisheyes et généralise très bien sur de nouvelles images (zero shot). En revanche c'est un modèle coûteux et les caméras doivent être positionnées verticalement, contrairement aux modèles plus classique où les caméras sont positionnées horizontalement, bien qu'une adaptation du modèle vers un positionnement horizontal semble réalisable.
+
+
 
 \subsection{Choix pour notre banc}
 Les travaux étudiés distinguent le choix de la représentation des images et celui de la méthode d'appariement. La rectification permet de réutiliser SGM, ELAS ou un réseau existant. Les méthodes directes adaptent plutôt la recherche à la géométrie fisheye. Aucune des évaluations présentées ne compare toutes ces options dans les mêmes conditions.
