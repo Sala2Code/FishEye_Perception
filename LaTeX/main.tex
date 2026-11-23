@@ -7,6 +7,7 @@
 \usepackage{lmodern,microtype}
 \usepackage[margin=2.1cm]{geometry}
 \usepackage{amsmath}
+\usepackage{amsmath,amssymb}
 \usepackage{booktabs,tabularx,array}
 \usepackage{enumitem}
 \usepackage{float}
@@ -91,7 +92,174 @@ Ces modèles sont toutefois des descriptions idéales. La projection d'une optiq
 La suite de ce rapport s'organise autour de quatre parties. Nous étudions d'abord les principaux prétraitements des images fisheye, en particulier les reprojections cylindrique et équirectangulaire, ainsi que leurs limites. Nous présentons ensuite les approches de détection et de suivi de personnes, avant d'aborder la calibration d'un banc stéréo fisheye et les méthodes d'estimation de profondeur dense. Enfin, nous revenons sur les choix méthodologiques et les avancées du projet, avec pour objectif à terme de combiner le suivi et la profondeur afin de localiser les personnes dans l'espace.
 
 
+%===================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+\section{Prétraitement des images fisheye}
+\label{sec:pretraitement}
+Les caméras fisheye offrent un champ de vision dépassant $180^\circ$, mais leur projection non linéaire modifie l'échelle, l'orientation locale et la courbure des objets loin de l'axe optique~\cite{kannala2006,hughes2008}. En vertu du \emph{Theorema Egregium} de Gauss~\cite{gauss1827,docarmo1976}, une sphère (courbure intrinsèque $+1$) ne peut être appliquée isométriquement sur un plan ou un cylindre (courbure nulle) : toute reprojection impose donc un compromis entre préservation des angles, des aires et des distances~\cite{snyder1987}. Par ailleurs, ni l'équivariance par translation des réseaux convolutifs (YOLO~\cite{redmon2016yolo}) ni les mécanismes d'attention des transformateurs (RT-DETR~\cite{zhao2024}) n'assurent d'invariance aux distorsions radiales fortes, dégradant la détection en périphérie~\cite{yogamani2019,gochoo2023}.
 
+Trois familles d'approches permettent d'exploiter ces capteurs : (i) les \textbf{méthodes fondées sur l'apprentissage} (\emph{blind rectification}), qui estiment la distorsion depuis les structures de la scène~\cite{rong2017,bogdan2018deepcalib,xue2019lines} mais restent sensibles au domaine d'entraînement et à l'instabilité temporelle ; (ii) les \textbf{méthodes hybrides}, couplant contraintes géométriques et couches apprises~\cite{jaderberg2015stn,coors2018spherenet} ; et (iii) les \textbf{méthodes géométriques paramétriques}, qui s'appuient sur la calibration pour reprojeter les rayons sur une surface analytique~\cite{kannala2006,plaut2021}. Nous retenons cette troisième famille pour son caractère déterministe explicable et cohérente avec la calibration métrique de la caméra~\cite{opencvfisheye}.
+
+
+\subsection{Modélisation géométrique et outils d'analyse des projections}
+
+Pour comparer rigoureusement les différentes représentations cibles, il convient d'introduire au préalable le modèle direct du capteur fisheye ainsi que les trois outils mathématiques permettant d'analyser toute reprojection : la reprojection inverse, l'équation des droites de l'espace et l'analyse métrique différentielle.
+
+\paragraph{1. Modèle de projection fisheye calibré.}
+Dans le repère caméra $\mathcal{R}_c=(O_c,X_c,Y_c,Z_c)$, où l'origine $O_c$ est placée au centre optique et $Z_c$ porte l'axe optique, tout point 3D $\mathbf{X}=(X,Y,Z)^\top \neq \mathbf{0}$ définit une direction incidente unitaire sur la sphère unité $\mathbb{S}^2 = \{\mathbf{d} \in \mathbb{R}^3 \mid \|\mathbf{d}\|_2 = 1\}$ :
+\begin{equation}
+  \mathbf{d} = \frac{\mathbf{X}}{\|\mathbf{X}\|_2} = (d_x,d_y,d_z)^\top \in \mathbb{S}^2
+\end{equation}
+Son angle d'incidence $\theta$ (angle polaire mesuré par rapport à l'axe optique $Z_c$) et son azimut $\phi$ (orientation autour de cet axe dans le plan image) sont définis par :
+\begin{equation}
+  \theta = \operatorname{atan2}\!\left(\sqrt{d_x^2+d_y^2}, \, d_z\right) \in [0, \pi] \qquad
+  \phi = \operatorname{atan2}(d_y, d_x) \in (-\pi, \pi]
+\end{equation}
+Le modèle polynomial radial de Kannala et Brandt~\cite{kannala2006} relie l'angle d'incidence $\theta$ à une distance radiale normalisée $q_D(\theta)$ dans le plan image à l'aide de quatre coefficients de distorsion $D = (k_1, k_2, k_3, k_4)$ :
+\begin{equation}
+  q_D(\theta) = \theta + k_1\theta^3 + k_2\theta^5 + k_3\theta^7 + k_4\theta^9
+\end{equation}
+Les coordonnées pixels $(u_f, v_f)$ sur le capteur fisheye s'obtiennent ensuite via la matrice des paramètres intrinsèques $K$ (focales $f_x, f_y$ exprimées en pixels et point principal $(c_x, c_y)$) :
+\begin{equation}
+  \begin{pmatrix} u_f \\ v_f \end{pmatrix}
+  = \begin{pmatrix} f_x & 0 \\ 0 & f_y \end{pmatrix}
+    \begin{pmatrix} q_D(\theta)\cos\phi \\ q_D(\theta)\sin\phi \end{pmatrix}
+    + \begin{pmatrix} c_x \\ c_y \end{pmatrix}
+  = \Pi_{\mathrm{fisheye}}(\mathbf{d}; K, D)
+\end{equation}
+La validité physique de ce modèle exige la stricte monotonie de la loi radiale sur tout le demi-champ de vision calibré $[0, \theta_{\max}]$,$ q_D'(\theta) > 0$. Cette condition garantit que deux rayons incidents d'angles distincts ne se projettent jamais sur un même pixel, assurant l'injectivité de $\Pi_{\mathrm{fisheye}}$~\cite{kannala2006}.
+
+\paragraph{2. Principe de reprojection inverse (\emph{backward mapping}) et tables de correspondance.}
+Construire une image prétraitée consiste à définir une surface cible paramétrée par une grille de pixels $(u_t, v_t)$. En pratique, on proscrit toute projection dans le sens direct (du capteur fisheye vers l'image cible), car les variations locales de densité de pixels laisseraient des lacunes non renseignées dans l'image d'arrivée~\cite{wolberg1990}. On applique systématiquement une \emph{reprojection inverse} (\emph{backward mapping}) : chaque représentation cible est définie par une application inverse explicite $\Psi^{-1} : (u_t, v_t) \mapsto \mathbf{d}(u_t, v_t) \in \mathbb{S}^2$, permettant de calculer les coordonnées continues dans l'image fisheye source par $(u_f, v_f) = \Pi_{\mathrm{fisheye}}(\mathbf{d}(u_t, v_t); K, D)$, puis d'évaluer l'intensité par interpolation bilinéaire~\cite{wolberg1990,opencvfisheye}. La géométrie de la caméra étant fixe après étalonnage, les grilles $(\mathcal{M}_x(u_t, v_t), \mathcal{M}_y(u_t, v_t))$ sont précalculées hors ligne dans une \emph{table de correspondance} (\emph{lookup table}, LUT). Le coût en ligne est alors strictement linéaire en nombre de pixels cibles $\mathcal{O}(W_t H_t)$~\cite{opencvfisheye}.
+
+\paragraph{3. Outil d'analyse de la rectitude des structures 3D.}
+Pour évaluer la préservation des formes architecturales et des silhouettes, on étudie l'image d'une droite générique de l'espace 3D ne passant pas par $O_c$, paramétrée par :
+\begin{equation}
+  \mathbf{X}(s) = \mathbf{X}_0 + s\,\mathbf{v}, \qquad s \in \mathbb{R} \quad \mathbf{X}_0 = (X_0, Y_0, Z_0)^\top \quad \mathbf{v} = (v_x, v_y, v_z)^\top \neq \mathbf{0}
+\end{equation}
+En substituant $\mathbf{d}(s) = \mathbf{X}(s)/\|\mathbf{X}(s)\|_2$ dans les équations de chaque projection cible, on détermine analytiquement quelles familles de droites (verticales, horizontales ou quelconques) demeurent rectilignes et lesquelles subissent une courbure~\cite{snyder1987}.
+
+\paragraph{4. Outil d'analyse différentielle (facteurs d'échelle locaux et anisotropie).}
+Pour quantifier localement l'étirement et la déformation des objets introduits par la reprojection, on compare un déplacement infinitésimal sur la sphère unité $\mathrm{d}s_{\mathbb{S}^2}^2 = \|\mathrm{d}\mathbf{d}\|_2^2$ au déplacement correspondant dans la grille image cible $(u_t, v_t)$~\cite{docarmo1976,snyder1987}. Le long de deux directions orthogonales principales $(e_1, e_2)$ de l'image cible, on définit les \emph{facteurs d'échelle locaux} $(s_1, s_2)$ (exprimés en pixels par radian) :
+\begin{equation}
+  s_1 = \frac{\mathrm{d}l_{\text{cible}, 1}}{\mathrm{d}s_{\mathbb{S}^2, 1}} \qquad
+  s_2 = \frac{\mathrm{d}l_{\text{cible}, 2}}{\mathrm{d}s_{\mathbb{S}^2, 2}}
+\end{equation}
+Leur produit $s_1 s_2$ mesure la dilatation surfacique locale (déterminant du jacobien), tandis que leur rapport $\mathcal{A} = \max(s_1/s_2, \, s_2/s_1) \ge 1$ mesure l'\emph{anisotropie locale} (l'allongement d'un objet carré selon un axe privilégié ; $\mathcal{A} = 1$ caractérise une projection localement conforme)~\cite{snyder1987}.
+
+\subsection{Représentations perspectives et panoramiques}
+
+\subsubsection{Projection perspective et approches multi-vues}
+
+La projection perspective projette les rayons incidents sur un plan image virtuel situé à la distance focale virtuelle $f_p > 0$, muni d'une matrice intrinsèque virtuelle $K_p$ (focales $f_{x,p}, f_{y,p}$ et point principal $(c_{u,p}, c_{v,p})$) et d'une rotation d'orientation éventuelle $R_v \in SO(3)$~\cite{hughes2008,bradski2008}.
+\begin{itemize}
+  \item \emph{Sens direct :} pour une direction unitaire exprimée dans le repère virtuel par $\mathbf{d}' = R_v \mathbf{d} = (d'_x, d'_y, d'_z)^\top$ avec $d'_z > 0$ ($\theta' < \pi/2$), la projection sur le plan normalisé $Z' = 1$ donne $(x_p, y_p) = (d'_x / d'_z, \, d'_y / d'_z)$, soit une distance radiale au centre $r_p(\theta') = f_p \tan\theta'$.
+  \item \emph{Sens inverse (construction de la LUT) :} pour chaque pixel cible $(u_p, v_p)$, on remonte au rayon normalisé dans le repère virtuel puis on applique la rotation inverse $R_v^\top$ :
+  \begin{equation}
+    \mathbf{d}_p(u_p, v_p) = \frac{R_v^\top \mathbf{v}_p}{\|\mathbf{v}_p\|_2} \qquad \text{avec } \mathbf{v}_p = \begin{pmatrix} \frac{u_p - c_{u,p}}{f_{x,p}} \\ \frac{v_p - c_{v,p}}{f_{y,p}} \\ 1 \end{pmatrix}
+  \end{equation}
+\end{itemize}
+
+
+Les rayons issus de $O_c$ s'appuyant sur une droite 3D $\mathbf{X}(s) = \mathbf{X}_0 + s\,\mathbf{v}$ définissent un plan vectoriel passant par l'origine d'équation $\mathbf{n}^\top \mathbf{X} = 0$, où $\mathbf{n} = \mathbf{X}_0 \times \mathbf{v} \neq \mathbf{0}$. Dans le repère virtuel ($\mathbf{n}' = R_v \mathbf{n}$), l'intersection de ce plan avec le plan image $Z' = 1$ satisfait l'équation linéaire :
+\begin{equation}
+  n'_x x_p + n'_y y_p + n'_z = 0
+\end{equation}
+Toute droite de l'espace se projette donc strictement en une droite dans le plan image, ce qui explique l'adéquation directe de cette représentation avec les détecteurs préentraînés~\cite{hughes2008}.
+
+
+En coordonnées polaires sur la sphère ($\mathrm{d}s_{\mathbb{S}^2}^2 = \mathrm{d}\theta'^2 + \sin^2\theta'\,\mathrm{d}\varphi'^2$) et sur le plan perspectif ($r_p = f_p\tan\theta'$), les facteurs d'échelle angulaires radial et orthoradial valent respectivement~\cite{snyder1987} :
+\begin{equation}
+  s_r(\theta') = \frac{\mathrm{d}r_p}{\mathrm{d}\theta'} = f_p\sec^2\theta' \qquad
+  s_\varphi(\theta') = \frac{r_p\,\mathrm{d}\varphi'}{\sin\theta'\,\mathrm{d}\varphi'} = f_p\sec\theta'
+\end{equation}
+Par rapport au rayon image du capteur fisheye $r_f(\theta') = f\,q_D(\theta')$, le facteur d'agrandissement radial s'écrit~\cite{kannala2006,hughes2008} :
+\begin{equation}
+  \frac{\mathrm{d}r_p}{\mathrm{d}r_f} = \frac{f_p\sec^2\theta'}{f\,q_D'(\theta')}
+\end{equation}
+On observe deux limitations majeures : d'une part, l'anisotropie locale croît comme $\mathcal{A}_p(\theta') = s_r / s_\varphi = \sec\theta'$, étirant radialement les objets périphériques (un facteur $4$ d'agrandissement radial dès $\theta' = 60^\circ$) et générant un flou par sur-échantillonnage ; d'autre part, lorsque $\theta' \to 90^\circ$, $\tan\theta'$ et $\sec^2\theta'$ divergent vers $+\infty$. La projection perspective globale ne peut donc pas représenter un hémisphère complet sur un plan fini, imposant une troncature du champ de vision utile~\cite{yogamani2019}.
+
+\paragraph{Approches multi-vues (\emph{Tangent Images} et \emph{Cubemap}).}
+Pour conserver une couverture angulaire complète tout en limitant l'angle maximal $\theta'$ sur chaque vue, on peut partitionner la sphère $\mathbb{S}^2_+$ en $N$ plans tangents orientés selon des rotations $\{R_i\}_{i=1}^N$ distinctes~\cite{eder2020,chiang2021}. Les \emph{Tangent Images}~\cite{eder2020} décomposent la sphère en facettes locales planes à faible distorsion, tandis que la projection \emph{Cubemap} projette l'hémisphère sur cinq faces orthogonales d'un cube circonscrit ($\text{FOV} = 90^\circ$ par face, bornant $\theta' \le \arctan\sqrt{2} \approx 54{,}7^\circ$ et $\sec^2\theta' \le 3$)~\cite{greene1986,wang2019cubemap}. Ces méthodes préservent la géométrie locale des objets, mais multiplient par $N$ le coût d'inférence et exigent une étape de fusion des détections aux jonctions entre vues (suppression des non-maxima sphérique) ainsi qu'une gestion des objets coupés aux arêtes du cube~\cite{wang2019cubemap,chiang2021}.
+
+\subsubsection{Projection cylindrique}
+
+La projection cylindrique enroule un cylindre circulaire droit virtuel de rayon unitaire ($R = 1$), d'axe parallèle à l'axe vertical $Y_c$ de la caméra, tangent à la sphère $\mathbb{S}^2$ le long du plan équatorial ($Y_c = 0$)~\cite{szeliski1997,lee2026}.
+\begin{itemize}
+  \item \emph{Sens direct :} pour toute direction incidente $\mathbf{d} = (d_x, d_y, d_z)^\top$ telle que $\sqrt{d_x^2 + d_z^2} > 0$, l'intersection du rayon avec le cylindre $X_c^2 + Z_c^2 = 1$ est le point $\mathbf{P}_{\text{cyl}} = \frac{1}{\sqrt{d_x^2 + d_z^2}}(d_x, d_y, d_z)^\top$. En déroulant le cylindre sur un plan, on définit l'azimut horizontal $\psi$ et la cote verticale $h$ (tangente de l'angle d'élévation $\varepsilon = \arcsin d_y$) :
+  \begin{equation}
+    \psi = \operatorname{atan2}(d_x, d_z) \in (-\pi, \pi] \qquad
+    h = \frac{d_y}{\sqrt{d_x^2 + d_z^2}} = \tan\varepsilon
+  \end{equation}
+  \item \emph{Sens inverse (construction de la LUT) :} pour un pixel cible $(u_c, v_c)$ de centre $(c_u, c_v)$ et de focales virtuelles $(f_{x,c}, f_{y,c})$, on calcule :
+  \begin{equation}
+    \psi = \frac{u_c - c_u}{f_{x,c}} \qquad
+    h = \frac{v_c - c_v}{f_{y,c}}
+  \end{equation}
+  puis la normalisation du point cylindrique $(\sin\psi, h, \cos\psi)^\top$ fournit la direction unitaire :
+  \begin{equation}
+    \mathbf{d}_c(u_c, v_c) = \frac{1}{\sqrt{1+h^2}} \begin{pmatrix} \sin\psi \\ h \\ \cos\psi \end{pmatrix}
+  \end{equation}
+\end{itemize}
+
+Pour toute droite verticale 3D $(X_0, Y_0+s, Z_0)^\top$, l'azimut $\psi_0 = \operatorname{atan2}(X_0,Z_0)$ est constant et sa projection reste strictement verticale ($u_c = c_u + f_{x,c}\psi_0$), préservant la posture des piétons sur $180^\circ$~\cite{szeliski1997,plaut2021}. À l'inverse, une droite horizontale frontale $(s, Y_0, Z_0)^\top$ vérifie $\sqrt{s^2+Z_0^2} = Z_0\sec\psi$ et se courbe selon $h(\psi) = (Y_0/Z_0)\cos\psi$. 
+
+Différentiellement, en  paramétrant la sphère par $(\psi, \varepsilon)$, l'élément d'arc sphérique vaut $\mathrm{d}s_{\mathbb{S}^2}^2 = \cos^2\varepsilon\,\mathrm{d}\psi^2 + \mathrm{d}\varepsilon^2$. Comme $\mathrm{d}u_c = f_{x,c}\,\mathrm{d}\psi$ et $\mathrm{d}v_c = f_{y,c}\,\mathrm{d}h = f_{y,c}\sec^2\varepsilon\,\mathrm{d}\varepsilon$, les facteurs d'échelle principaux sont~\cite{snyder1987} :
+\begin{equation}
+  s_\psi(\varepsilon) = \frac{\mathrm{d}u_c}{\cos\varepsilon\,\mathrm{d}\psi} = f_{x,c}\sec\varepsilon \qquad
+  s_\varepsilon(\varepsilon) = \frac{\mathrm{d}v_c}{\mathrm{d}\varepsilon} = f_{y,c}\sec^2\varepsilon
+\end{equation}
+Le long de l'équateur ($\varepsilon = 0$), l'échelle horizontale $s_\psi = f_{x,c}$ est constante sur tout le champ de $180^\circ$, évitant toute divergence latérale. En revanche, l'échelle verticale croît en $\sec^2\varepsilon$ et l'anisotropie locale vaut $\mathcal{A}_{\text{cyl}}(\varepsilon) = \frac{f_{y,c}}{f_{x,c}}\sec\varepsilon$ : lorsque l'angle d'élévation $\varepsilon \to \pm 90^\circ$, $h = \tan\varepsilon$ diverge vers $\pm\infty$, rendant impossible la représentation du champ vertical complet~\cite{szeliski1997,snyder1987}. Par ailleurs, la verticalité des objets n'est garantie que si l'axe du cylindre demeure aligné avec la verticale du monde réel.
+
+\subsubsection{Projection équirectangulaire (ERP)}
+
+La projection équirectangulaire (\emph{Equirectangular Projection}, ERP) établit une correspondance linéaire directe entre les coordonnées sphériques $(\lambda, \varphi)$ (longitude et latitude) et les coordonnées pixels $(u_e, v_e)$ d'une grille rectangulaire de dimensions $W \times H$ couvrant un intervalle angulaire $\Delta\Lambda$ en longitude et $\Delta\Phi$ en latitude~\cite{ohashi2017,su2017spherical}.
+\begin{itemize}
+  \item \emph{Sens direct :} pour une direction unitaire $\mathbf{d} = (d_x, d_y, d_z)^\top \in \mathbb{S}^2$, les coordonnées angulaires sphériques sont :
+  \begin{equation}
+    \lambda = \operatorname{atan2}(d_x, d_z) \in [-\pi, \pi] \qquad
+    \varphi = \arcsin(d_y) \in \left[-\frac{\pi}{2}, \frac{\pi}{2}\right]
+  \end{equation}
+  et se projettent linéairement sur la grille cible :
+  \begin{equation}
+    u_e = W\left(\frac{\lambda}{\Delta\Lambda} + \frac{1}{2}\right) \qquad
+    v_e = H\left(\frac{1}{2} - \frac{\varphi}{\Delta\Phi}\right)
+  \end{equation}
+  \item \emph{Sens inverse (construction de la LUT) :} pour chaque pixel cible $(u_e, v_e)$, on calcule :
+  \begin{equation}
+    \lambda = \left(\frac{u_e}{W} - \frac{1}{2}\right)\Delta\Lambda \qquad
+    \varphi = \left(\frac{1}{2} - \frac{v_e}{H}\right)\Delta\Phi
+  \end{equation}
+  et le vecteur directionnel unitaire associé s'écrit :
+  \begin{equation}
+    \mathbf{d}_e(\lambda, \varphi) = \begin{pmatrix} \cos\varphi\sin\lambda \\ \sin\varphi \\ \cos\varphi\cos\lambda \end{pmatrix}
+  \end{equation}
+\end{itemize}
+
+
+Dans ce paramétrage d'axe polaire vertical $Y_c$, une droite verticale $\mathbf{X}(s) = (X_0, \, Y_0 + s, \, Z_0)^\top$ conserve une longitude constante $\lambda = \operatorname{atan2}(X_0, Z_0) = \lambda_0$, et demeure donc une colonne verticale ($u_e = \text{cte}$). En revanche, une droite horizontale frontale $\mathbf{X}(s) = (s, Y_0, Z_0)^\top$ vérifie $\tan\varphi = Y_0 / \sqrt{s^2 + Z_0^2} = (Y_0 / Z_0)\cos\lambda$, soit la courbe $
+  \varphi(\lambda) = \arctan\!\left(\frac{Y_0}{Z_0}\cos\lambda\right)$.
+Lorsque l'ERP est définie avec ses pôles alignés sur l'axe optique $Z_c$, les droites verticales hors du méridien central subissent également une courbure sinusoïdale, ce qui déforme les silhouettes périphériques~\cite{guerreroviu2020}.
+
+
+Sur la sphère unité, l'élément de longueur est $\mathrm{d}s_{\mathbb{S}^2}^2 = \cos^2\varphi\,\mathrm{d}\lambda^2 + \mathrm{d}\varphi^2$ et l'élément d'angle solide est  $\mathrm{d}\Omega = \cos\varphi\,\mathrm{d}\lambda\,\mathrm{d}\varphi$~\cite{snyder1987}. Dans l'image ERP, en notant $k_\lambda = W/\Delta\Lambda$ et $k_\varphi = H/\Delta\Phi$ les résolutions angulaires constantes (en pixels par radian), les facteurs d'échelle principaux le long des parallèles et des méridiens valent~\cite{snyder1987,su2017spherical} :
+\begin{equation}
+  s_h(\varphi) = \frac{\mathrm{d}u_e}{\cos\varphi\,\mathrm{d}\lambda} = \frac{k_\lambda}{\cos\varphi} = k_\lambda\sec\varphi \qquad
+  s_v(\varphi) = \frac{|\mathrm{d}v_e|}{\mathrm{d}\varphi} = k_\varphi
+\end{equation}
+Ainsi, contrairement à la projection cylindrique où $h = \tan\varepsilon$ diverge, la latitude $\varphi \in [-\pi/2, \pi/2]$ reste bornée et permet de représenter l'intégralité de l'hémisphère ($180^\circ \times 180^\circ$, voire $360^\circ \times 180^\circ$) dans un tenseur fini~\cite{coors2018spherenet}. Toutefois, l'anisotropie locale croît en $\mathcal{A}_{\text{erp}}(\varphi) = \frac{k_\lambda}{k_\varphi}\sec\varphi$ : les régions proches des pôles ($\varphi \to \pm\pi/2$) subissent un étirement horizontal infini, et toutes les longitudes $\lambda$ convergent vers une même direction physique $\mathbf{d}_e = (0, \pm 1, 0)^\top$ aux pôles, créant une dégénérescence topologique où le jacobien surfacique $\cos\varphi$ s'annule~\cite{snyder1987,su2017spherical}.
+
+
+\begin{figure}[H]
+  \centering
+  \includesvg[width=\linewidth]{img/comparaison_pretraitements_stickmen.svg}
+  \caption{Simulation comparative des reprojections géométriques paramétriques appliquées à une scène 3D comportant un sol quadrillé, des poteaux verticaux, un bandeau horizontal et trois personnages articulés (\emph{stick men}) placés à $-10^\circ$ (bleu), $+38^\circ$ (orange) et $-68^\circ$ (rouge) de l'axe optique : \textbf{(a)}~acquisition fisheye brute ($\text{FOV} \approx 184^\circ$, modèle polynomial de Kannala-Brandt) ; \textbf{(b)}~reprojection perspective globale ($\text{FOV} = 110^\circ$), où les droites sont restaurées mais le sujet périphérique à $-68^\circ$ est tronqué ; \textbf{(c)}~découpage multi-vues tangentes ($3 \times 75^\circ$ centrées sur $-55^\circ$, $0^\circ$ et $+55^\circ$), redressant chaque sujet au prix de $N = 3$ vues distinctes ; \textbf{(d)}~projection cylindrique ($180^\circ \times 110^\circ$), préservant l'intégralité du champ horizontal et la verticalité stricte des poteaux et des trois silhouettes en une seule image ; \textbf{(e)}~projection équirectangulaire ERP ($180^\circ \times 160^\circ$), couvrant l'ensemble du champ vertical au prix d'un étirement horizontal vers les pôles.}
+  \label{fig:comparaison-pretraitements}
+\end{figure}
+
+Dans le contexte de la détection et du suivi de personnes autour d'un robot mobile, les piétons évoluent principalement autour du plan horizontal ($\varepsilon \in [-30^\circ, +40^\circ]$), zone où $\sec\varepsilon \in [1{,}00\,;\, 1{,}31]$ demeure modéré. La \textbf{projection cylindrique} est donc retenue comme représentation privilégiée pour notre chaîne de détection et de suivi : elle couvre $180^\circ$ horizontalement en une seule passe d'inférence ($N = 1$) tout en préservant strictement la verticalité des silhouettes humaines~\cite{plaut2021}. La \textbf{projection équirectangulaire (ERP)} est conservée comme représentation complémentaire lorsque la couverture du champ vertical complet est nécessaire (personnes très proches du capteur ou caméra inclinée), ainsi que pour l'alignement épipolaire sphérique du banc stéréo étudié à la section~\ref{sec:stereo-dense}~\cite{abraham2005,su2017spherical}. 
+%Ce choix repose sur les propriétés géométriques et les contraintes temps réel du système ; sa supériorité effective en détection et en suivi devra être établie expérimentalement sur les images transformées.
+
+%=====================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
 
 \section{Prétraitements (3 pages)}
 
