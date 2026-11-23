@@ -1,4 +1,9 @@
 # Fichiers auxiliaires de compilation LaTeX (sources .tex/.bib et PDF conserves).
+# Images générées par le notebook
+notebook/**/*.png
+notebook/**/*.jpg
+# Exception si tu veux garder une image précise :
+!data/fisheye_example/**
 *.aux
 *.bbl
 *.bbl-SAVE-ERROR

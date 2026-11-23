@@ -13,6 +13,7 @@
 \usepackage{float}
 \usepackage{hyperref}
 \usepackage{xcolor}
+\usepackage{graphicx}
 \usepackage{svg}
 \usepackage{csquotes}
 \usepackage{multirow}
@@ -336,16 +337,100 @@ Au dela de la géométrie choisi, redresser une image change forcément la faço
 
 Pour notre cas d'usage, où l'on cherche surtout à détecter et suivre des personnes qui marchent autour du robot, la reprojection cylindrique reste le choix le plus logique. Les piétons évoluent principalement autour de la ligne d'horizon (entre $-30^\circ$ et $+40^\circ$ en hauteur), une zone où le cylindre ne déforme presque pas les proportions et garde les silhouettes bien droites. L'ERP reste toutefois utile si l'on a besoin de voir tout en haut ou tout en bas du champ de vision, par exemple si quelqu'un passe très près du capteur.
 
-\section{Détection et suivi (4 pages)}
-\subsection*{Détection}
 
-\textcolor{red}{Décrire brièvement la logique d'un détecteur préentraîné (YOLOv8 / YOLO11 ; RT-DETR~\cite{zhao2024} en comparaison si justifiée).
-Cout computationnel, vitesse, précision, classes disponibles, AP50, mAP50--95. Montrer les limites de la détection sur des images fisheye brutes et les améliorations obtenues par reprojection cylindrique ou ERP. Mentionner brièvement les alternatives (FishEye8K~\cite{plauttutorial}, WoodScape~\cite{bourkefish2pano}) et leurs limites (données synthétiques, classes limitées, performances moindres). Montrer que la détection est un prérequis pour le suivi et la localisation 3D.}
+\section{Détection et suivi de personnes}
+\label{sec:detection-suivi}
 
-\subsection*{Tracking}
-\textcolor{red}{Principe du tracking, filtre de Kalmann, occlusion,cout computationnel}
+Le suivi retenu suit le schéma dit de \emph{suivi par détection} : un détecteur localise les personnes dans chaque image, puis un algorithme de suivi relie ces détections d'une image à l'autre et attribue à chaque personne un identifiant stable. Dans notre chaîne, l'image fisheye de la caméra de référence est d'abord reprojetée (section~\ref{sec:pretraitement}), puis traitée par le détecteur et le suiveur. Les identifiants obtenus sont enfin associés à la carte de profondeur du banc stéréo (section~\ref{sec:stereo-dense}) pour localiser chaque personne en 3D. Le banc est fixe et placé à hauteur d'homme, ce qui oriente plusieurs choix ci-dessous.
 
-Expliquer (brievement) les différentes approches/modèles la chronologie, les nouveautés, les performances \textbf{SORT}~\cite{bewley2016} (Kalman + IoU + affectation), \textbf{Deep SORT}~\cite{wojke2017} (apparence), \textbf{ByteTrack}~\cite{zhang2022bytetrack} (détections de confiance basse), \textbf{BoT-SORT}~\cite{aharon2022} (mouvement/apparence). Puis deux publications spécialisées au \emph{suivi fisheye} particulièrement utiles : \textbf{FORT}~\cite{odic2023fort} et suivi de boîtes orientées \textbf{Lam (BMVC 2024)}~\cite{lam2024}. 
+\subsection{Un détecteur préentraîné : YOLO26}
+
+\paragraph{Principe.} Les détecteurs de la famille YOLO traitent l'image en une seule passe~\cite{redmon2016yolo}. Un réseau convolutif extrait des caractéristiques à plusieurs résolutions, puis une tête de prédiction propose, en chaque position d'une grille, une boîte englobante, un score de confiance et une classe. Les détecteurs classiques produisent plusieurs boîtes pour un même objet et les filtrent ensuite par suppression des non-maxima (NMS). YOLO26 supprime cette étape : une tête dite \emph{de bout en bout} est entraînée à ne produire qu'une boîte par objet, et le module de régression des boîtes (DFL) est retiré, ce qui allège l'inférence, en particulier sur processeur~\cite{yolo26}. Les modèles fournis sont entraînés sur COCO~\cite{lin2014coco}, dont les 80 classes incluent la classe \emph{person} : aucun réentraînement n'est nécessaire pour détecter des personnes.
+
+\paragraph{Précision et coût.} La précision d'un détecteur se mesure par l'\emph{Average Precision} (AP), aire sous la courbe précision--rappel. Une détection est jugée correcte si son recouvrement avec la boîte annotée (IoU) dépasse un seuil : l'AP50 utilise un seuil de $0{,}5$, tandis que la mAP50--95 moyenne les AP obtenues pour des seuils de $0{,}5$ à $0{,}95$ et toutes les classes, ce qui récompense aussi la précision du placement des boîtes. Le tableau~\ref{tab:yolo26} résume le compromis entre précision et coût des cinq tailles de YOLO26.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{lrrrrr}
+\toprule
+Modèle & mAP50--95 & CPU (ms) & GPU T4 (ms) & Paramètres (M) & FLOPs (G)\\
+\midrule
+YOLO26n & 40,9 & 38,9 & 1,7 & 2,4 & 5,4\\
+YOLO26s & 48,6 & 87,2 & 2,5 & 9,5 & 20,7\\
+YOLO26m & 53,1 & 220,0 & 4,7 & 20,4 & 68,2\\
+YOLO26l & 55,0 & 286,2 & 6,2 & 24,8 & 86,4\\
+YOLO26x & 57,5 & 525,8 & 11,8 & 55,7 & 193,9\\
+\bottomrule
+\end{tabular}
+\caption{Performances de YOLO26 sur COCO val, images de $640\times640$ pixels~\cite{yolo26}. Temps d'inférence sur processeur (ONNX) et sur GPU NVIDIA T4 (TensorRT) ; ils ne valent que pour cette taille d'entrée.}
+\label{tab:yolo26}
+\end{table}
+
+Deux remarques comptent pour notre usage. D'abord, ces chiffres portent sur les 80 classes de COCO et sur des images perspectives : ils ne prédisent pas la précision sur la seule classe \emph{person} dans une image reprojetée. Ensuite, le coût croît avec le nombre de pixels traités. Or une image cylindrique de $180^\circ$ à la résolution native du fisheye mesure environ $1\,000$ pixels de large, et un panorama de $360^\circ$ plus de $2\,000$. Pour ne pas perdre de détails en périphérie, nous n'avons pas réduit ces images, ce qui multiplie le temps d'inférence par rapport aux valeurs du tableau. Le modèle \texttt{s} constitue un bon point de départ ; le modèle \texttt{n} servira si la cadence l'exige. RT-DETR~\cite{zhao2024}, détecteur à base de transformeurs également sans NMS, est une alternative ; nous avons retenu YOLO26 pour sa rapidité et son intégration directe avec les suiveurs disponibles dans Ultralytics~\cite{ultralyticstracking}.
+
+\subsection{Limites sur l'image brute et apport de la reprojection}
+
+Un détecteur entraîné sur COCO a surtout vu des personnes debout et verticales. Dans une image fisheye brute, une personne éloignée de l'axe optique apparaît inclinée, courbée et comprimée : l'invariance aux distorsions radiales n'est pas garantie par l'architecture (section~\ref{sec:pretraitement}). Pour mesurer l'effet des reprojections, nous avons appliqué YOLO26s, sans réentraînement, aux cinq représentations du rapport sur 120 images de la base FishEye8K~\cite{gochoo2023} réparties sur l'ensemble de ses caméras, soit 305 piétons annotés. Les détections de chaque représentation sont ramenées dans l'image d'origine par les rayons 3D, puis comparées aux annotations (confiance $\geq 0{,}25$, IoU $\geq 0{,}5$). FishEye8K ne fournissant pas de calibration, nous avons supposé un objectif équidistant de $180^\circ$ et estimé le cercle image automatiquement.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\linewidth]{img/rappel_par_theta.png}
+\caption{Rappel des piétons annotés de FishEye8K selon l'angle $\theta$ à l'axe optique, pour YOLO26s sans réentraînement. La tranche $0$--$30^\circ$ ne compte que trois piétons et n'est pas interprétable.}
+\label{fig:rappel-theta}
+\end{figure}
+
+La figure~\ref{fig:rappel-theta} montre trois effets. Dans la tranche $50$--$65^\circ$, qui contient le plus de piétons ($n=139$), le rappel passe de $27\,\%$ sur l'image brute à $54\,\%$ en cylindrique, $58\,\%$ en multivues et $64\,\%$ en ERP : la reprojection double environ le rappel là où les personnes sont le plus déformées. La perspective globale chute en revanche à près de $0$ au-delà de $50^\circ$, conformément à la troncature et à l'étirement en $\sec^2\theta'$ décrits plus haut. Enfin, au-delà de $65^\circ$, aucune représentation ne dépasse $30\,\%$ : les piétons y couvrent quelques pixels, et la reprojection agrandit l'image sans recréer le détail perdu.
+
+Ces résultats sont à lire avec prudence. Les caméras de FishEye8K surveillent des carrefours en vue plongeante : le cylindre y tourne autour de l'axe optique et les piétons se trouvent sous l'horizon, où l'échelle verticale du cylindre croît en $\sec^2\varepsilon$, ce qui explique l'avantage de l'ERP. Sur notre banc à hauteur d'homme, les personnes seront proches de l'horizon, où cylindre et ERP se confondent et où le cylindre garde des verticales strictement droites. La calibration approximative et l'élargissement des boîtes ramenées dans l'image brute pénalisent aussi la périphérie. La même expérience sera reproduite sur des images du banc, avec sa vraie calibration.
+
+\paragraph{Apprendre directement sur le fisheye.} L'alternative à la reprojection consiste à réentraîner le détecteur sur des images fisheye annotées. FishEye8K~\cite{gochoo2023} propose $8\,000$ images réelles et cinq classes, dont \emph{Pedestrian}, mais en vue plongeante, sans calibration et sous licence non commerciale ; même entraînés sur cette base, les détecteurs testés par ses auteurs y obtiennent un rappel de $0{,}37$ à $0{,}53$ seulement, à un seuil de confiance de $0{,}5$. WoodScape~\cite{yogamani2019} fournit des images réelles et calibrées de quatre caméras automobiles de $190^\circ$, avec des boîtes de personnes, mais avec des caméras proches du sol et un accès sur inscription. Les autres bases de personnes, comme LOAF~\cite{yang2023loaf} ou PMOF~\cite{wermuth2026pmof}, sont prises depuis le plafond. Aucune ne correspond à un banc à hauteur d'homme : un réentraînement demanderait d'annoter nos propres séquences. Nous conservons donc un détecteur préentraîné associé à une reprojection, le réentraînement restant une piste si le rappel du banc s'avère insuffisant.
+
+\subsection{Suivi multi-objets}
+
+\paragraph{Principe.} Le suivi par détection repose sur trois étapes répétées à chaque image. Un filtre de Kalman prédit la position de chaque piste à partir de son état, généralement le centre, la taille de la boîte et leurs vitesses, sous une hypothèse de vitesse constante. Les prédictions sont ensuite associées aux nouvelles détections par un coût, souvent $1-\mathrm{IoU}$ ou une distance d'apparence, minimisé par l'algorithme hongrois. Enfin, les pistes appariées sont mises à jour, de nouvelles pistes sont créées et celles restées sans détection pendant plusieurs images sont supprimées. Les principales difficultés sont les occultations, les croisements de personnes et les mouvements que le modèle à vitesse constante prédit mal. Les performances se mesurent par la MOTA, centrée sur les erreurs de détection, l'IDF1, centrée sur la conservation des identités, et la HOTA, qui équilibre les deux~\cite{luiten2021}.
+
+\begin{table}[H]
+\centering\small
+\begin{tabularx}{\linewidth}{lXr}
+\toprule
+Méthode & Apport principal & HOTA MOT17\\
+\midrule
+SORT~\cite{bewley2016} & Kalman, IoU et algorithme hongrois ; très rapide, mais nombreux changements d'identité lors des occultations & --\\
+DeepSORT~\cite{wojke2017} & Ajoute un descripteur d'apparence appris (réidentification) pour retrouver une personne après occultation & --\\
+ByteTrack~\cite{zhang2022bytetrack} & Associe aussi les détections de faible confiance, souvent des personnes partiellement cachées & 63,1\\
+OC-SORT~\cite{cao2023} & Corrige le filtre à partir des observations après une occultation ; robuste aux mouvements non linéaires & 63,2\\
+BoT-SORT~\cite{aharon2022} & Filtre de Kalman amélioré, compensation du mouvement de caméra, fusion mouvement et apparence & 65,0\\
+StrongSORT~\cite{du2022} & Modernise DeepSORT (meilleur descripteur, filtre et association) & --\\
+\midrule
+FORT~\cite{odic2023fort} & Fisheye vu de dessus : détection, réidentification et filtre de Kalman adapté à la distorsion & --\\
+Lam~\cite{lam2024} & Fisheye vu de dessus : suivi de boîtes orientées par un filtre de Kalman linéaire & --\\
+DAFTrack~\cite{vanasirikul2025} & Fisheye vu de dessus : suivi sur un plan virtuel et filtre de Kalman sans parfum (UKF) & --\\
+\bottomrule
+\end{tabularx}
+\caption{Principaux suiveurs. Les scores HOTA sur MOT17 (test) sont ceux publiés par les auteurs, avec leurs propres détecteurs et des caméras perspectives ; ils ne préjugent pas des performances sur nos images.}
+\label{tab:suiveurs}
+\end{table}
+
+La lignée généraliste du tableau~\ref{tab:suiveurs} montre deux leviers : mieux exploiter les détections incertaines (ByteTrack) et ajouter l'apparence pour les occultations longues (DeepSORT, BoT-SORT). ByteTrack atteint $80{,}3$ de MOTA et $77{,}3$ d'IDF1 sur MOT17 à environ 30 images par seconde sur un GPU V100, détecteur compris~\cite{zhang2022bytetrack} ; BoT-SORT avec réidentification atteint $80{,}5$ de MOTA et $80{,}2$ d'IDF1~\cite{aharon2022}. Les trois méthodes fisheye répondent à la même difficulté : dans l'image brute, un mouvement rectiligne devient courbe et sa vitesse apparente varie, ce qui invalide l'hypothèse de vitesse constante. Elles traitent toutes des caméras placées au plafond ; DAFTrack améliore par exemple la HOTA de $6{,}1$ points sur la base CEPDOF~\cite{vanasirikul2025}.
+
+\subsection{Quel suiveur selon la configuration}
+
+Le choix dépend surtout du montage des caméras, de l'espace dans lequel on suit les personnes et des ressources de calcul.
+
+\begin{itemize}
+\item \textbf{Une caméra horizontale à hauteur d'homme, image cylindrique} (notre configuration de base). Nous recommandons \textbf{ByteTrack}. Le cylindre conserve une échelle horizontale constante : une personne qui traverse la scène y suit une trajectoire presque rectiligne et le modèle à vitesse constante redevient valable. La caméra étant fixe, la compensation de mouvement de BoT-SORT est inutile et peut être désactivée. ByteTrack est disponible directement dans Ultralytics~\cite{ultralyticstracking}.
+\item \textbf{Groupes de personnes qui se croisent ou occultations longues} (notre objectif final). Il faut ajouter l'apparence : \textbf{BoT-SORT avec réidentification}, sans compensation de mouvement. Le descripteur, appris sur des images perspectives, fonctionne mieux sur des personnes redressées par le cylindre que sur l'image brute. Si le calcul est limité, \textbf{OC-SORT} améliore la reprise après occultation sans réseau d'apparence.
+\item \textbf{Suivi directement sur l'image brute.} Le mouvement apparent n'y est plus linéaire. Il faut soit un filtre adapté comme \textbf{FORT}, soit un filtre de Kalman exprimé en angles $(\psi,\varepsilon)$ plutôt qu'en pixels, ce qui revient à suivre dans l'espace du cylindre.
+\item \textbf{Caméra au plafond ou en plongée} (cas de FishEye8K). Les personnes y sont orientées radialement et une boîte droite les englobe mal. On peut détecter des boîtes orientées (YOLO26 existe en version OBB) et les suivre avec la méthode de \textbf{Lam}, ou suivre sur un plan virtuel avec \textbf{DAFTrack}. Une ERP autour de l'axe optique suivie de ByteTrack est l'alternative la plus simple.
+\item \textbf{Deux caméras fisheye en stéréo} (notre banc). La solution la plus simple est de suivre en 2D sur la seule caméra de référence de la carte de profondeur, puis d'associer à chaque identifiant un point 3D. On peut ensuite filtrer ces points par un filtre de Kalman exprimé au sol, dans le repère du banc : le mouvement réel d'une personne y est presque linéaire et indépendant de la distorsion. Détecter et suivre sur les deux caméras puis apparier les personnes par la géométrie épipolaire rendrait le suivi plus robuste aux occultations, au prix d'un calcul doublé ; nous le gardons comme extension.
+\item \textbf{Ressources limitées} (processeur embarqué). YOLO26n associé à ByteTrack ou OC-SORT, sans réidentification.
+\end{itemize}
+
+\subsection{De la détection à la localisation 3D}
+
+La détection est un prérequis pour les deux étapes suivantes. Le suiveur ne fait qu'associer des détections : il peut combler une absence de quelques images, mais une personne jamais détectée n'aura jamais d'identifiant. Le rappel du détecteur borne donc celui du suivi, et la faiblesse observée au-delà de $65^\circ$ se retrouvera dans les trajectoires. De même, la localisation 3D part de la boîte : son pixel central ou ses pieds sont ramenés à une direction de l'espace grâce à la calibration, puis cette direction est projetée dans la carte de profondeur. Une médiane des profondeurs dans la région de la personne donne un point représentatif, et la suite de ces points, indexée par l'identifiant du suiveur, forme une trajectoire 3D. Une boîte mal placée mesure la profondeur du fond plutôt que celle de la personne ; YOLO26 existant aussi en version estimation de pose, la position des chevilles pourra fournir un point d'appui au sol plus fiable.
+
+Les prochains essais porteront sur des séquences du banc annotées avec des identifiants. Nous comparerons ByteTrack, BoT-SORT avec réidentification et OC-SORT sur l'image cylindrique, en mesurant la HOTA, l'IDF1 et le nombre de changements d'identité lors des croisements.
 
 
 \section{Banc stéréo fisheye et estimation dense}
@@ -456,8 +541,6 @@ Pour finir, on upscale donc cette carte de profondeur avec une combinaison conve
 
 \begin{table}[htbp]
 \centering
-
-\label{tab:dfi_results}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{llcccccccc}
 \toprule
@@ -475,6 +558,7 @@ IGEV-Stereo & Conventionnelle & 0,225 & 0,423 & 0,172 & -- & 1,860 & 4,474 & 0,1
 \end{tabular}%
 }
 \caption{Résultats DFI-OmniStereo}
+\label{tab:dfi_results}
 \end{table}
 
 Ce modèle est actuellement l'un des meilleurs modèles fonctionnant sur des caméras fisheyes et généralise très bien sur de nouvelles images (zero shot). En revanche c'est un modèle coûteux et les caméras doivent être positionnées verticalement, contrairement aux modèles plus classique où les caméras sont positionnées horizontalement, bien qu'une adaptation du modèle vers un positionnement horizontal semble réalisable.

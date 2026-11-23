@@ -139,12 +139,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Stéréo.md",
+                "file": "Detection.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Stéréo"
+              "title": "Detection"
             }
           }
         ],
@@ -317,8 +317,11 @@
   },
   "active": "339e41e0b0368ae1",
   "lastOpenFiles": [
+    "TODO.md",
     "Sujet.md",
     "Stéréo.md",
+    "Tracking.md",
+    "Pré-traitement.md",
     "Note/Note 1 oct. 2026.pdf",
     "papier/WideDepth_Millimeter-Accurate_Benchmark_for Fisheye_Depth_Estimation.md",
     "papier/YOLO26_Key_Architectural_Enhancements_and Performance_Benchmarking_for_Real-Time_Object Detection.md",
@@ -326,12 +329,9 @@
     "papier/Eder_Shvets_Lim_Frahm_Tangent_Images_for_Mitigating_Spherical_Distortion.md",
     "Note",
     "Detection.md",
-    "Pré-traitement.md",
     "papier/Monocular_Depth_Estimation_from_a_Fisheye_Camera_Based_on_Knowledge_Distillation.md",
     "papier/Fisheye_omnidirectional_stereo depth_estimation_assisted_with_edge-awareness.md",
     "papier/Wen_Trepte_Aribido_Kautz_Gallo_Birchfield_FoundationStereo_Zero-Shot_Stereo_Matching.md",
-    "Tracking.md",
-    "TODO.md",
     "papier/Caron_Models_and_Calibration_Methods.md",
     "papier/Plaut_Yaacov_El_Shlomo_3D_Object_Detection_from_a_Single_Fisheye_Image_Without_a_Single_Fisheye_Training_Image.md",
     "papier/Bewley_Ge_Ott_Ramos_Upcroft_Simple_Online_and_Realtime_Tracking.md",
